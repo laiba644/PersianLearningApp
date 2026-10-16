@@ -1,0 +1,16 @@
+# Eclipse workspace/local state
+.metadata/
+.settings/
+.project.local
+
+# Compiled output
+bin/
+target/
+*.class
+
+# Local secrets
+.env
+config/db.properties
+
+# Connector/J binary is installed locally by each teammate
+lib/*.jar

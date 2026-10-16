@@ -1,0 +1,14 @@
+flowchart TD
+UI["UC Swing presentation"] --> BO["UC business object"]
+BO --> F["IDALFacade"]
+F --> CH["ChapterDAO / MySQLChapterDAO"]
+F --> ST["ComponentDAO / MySQLComponentDAO (UC-02)"]
+F --> CT["ComponentContentDAO / MySQLComponentContentDAO (UC-03)"]
+F --> GL["GlossaryDAO / MySQLGlossaryDAO (UC-04)"]
+CH --> DB[("XAMPP MySQL database")]
+ST --> DB
+CT --> DB
+GL --> DB
+FACTORY["Abstract DAO Factory"] --> F
+BO --> EVENTS["Observable event source"]
+EVENTS --> OBS["Registered observers"]

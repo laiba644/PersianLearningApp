@@ -1,0 +1,27 @@
+classDiagram
+class Chapter {
+  +int id
+  +String title
+  +Timestamp createdAt
+  +Timestamp updatedAt
+}
+class ChapterComponent {
+  +int id
+  +int chapterId
+  +String componentType
+  +int displayOrder
+}
+class ComponentContent {
+  +int componentId
+  +String persianContent
+  +String urduContent
+}
+class GlossaryEntry {
+  +int id
+  +int chapterId
+  +String persianWord
+  +String urduMeaning
+}
+Chapter "1" *-- "0..*" ChapterComponent : owns
+Chapter "1" *-- "0..*" GlossaryEntry : owns
+ChapterComponent "1" *-- "0..1" ComponentContent : has text
