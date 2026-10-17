@@ -8,5 +8,6 @@ public enum ComponentType {
     URDU_TRANSLATION_OR_EXPLANATION,
     GRAMMAR_OR_LANGUAGE_NOTE,
     EXAMPLES,
+    EXERCISES,
     GLOSSARY
 }
