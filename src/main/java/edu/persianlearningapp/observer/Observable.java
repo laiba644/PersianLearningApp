@@ -3,7 +3,7 @@ package edu.persianlearningapp.observer;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Pull-style Observer pattern base, following the supplied course note. */
+/** Pull-style Observer pattern base */
 public abstract class Observable {
     private final List<Observer> observers = new ArrayList<Observer>();
     public void addObserver(Observer observer) {
