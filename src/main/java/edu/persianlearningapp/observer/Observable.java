@@ -7,8 +7,10 @@ import java.util.List;
 public abstract class Observable {
     private final List<Observer> observers = new ArrayList<Observer>();
     public void addObserver(Observer observer) {
-        if (observer == null) throw new IllegalArgumentException("observer cannot be null");
-        if (!observers.contains(observer)) observers.add(observer);
+        if (observer == null) 
+        	throw new IllegalArgumentException("observer cannot be null");
+        if (!observers.contains(observer)) 
+        	observers.add(observer);
     }
     public void removeObserver(Observer observer) { observers.remove(observer); }
     protected void notifyObservers() {
