@@ -82,7 +82,7 @@ public class ChapterBOTest {
     public void createChapterRejectsTitleLongerThan255Characters() {
         StringBuilder longTitle = new StringBuilder();
         for (int i = 0; i < 256; i++) {
-            longTitle.append('A');
+            longTitle.append('ا');
         }
 
         assertThrows(BusinessException.class,
