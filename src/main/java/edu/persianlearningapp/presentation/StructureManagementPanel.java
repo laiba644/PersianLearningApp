@@ -132,8 +132,8 @@ public class StructureManagementPanel extends JPanel {
         });
     }
 
-    private String typeLabel(ComponentType type) {
-        switch (type) {
+    private String typeLabel(ComponentType typename) {
+        switch (typename) {
             case LEARNING_OBJECTIVES:
                 return "سیکھنے کے مقاصد";
             case PERSIAN_DIALOGUE:
@@ -151,7 +151,7 @@ public class StructureManagementPanel extends JPanel {
             case GLOSSARY:
                 return "لغت";
             default:
-                return type.name();
+                return typename.name();
         }
     }
 
