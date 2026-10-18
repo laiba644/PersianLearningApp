@@ -14,9 +14,10 @@ public class App {
         LearningEventSource events = new LearningEventSource();
         ChapterBO chapterBO = new ChapterBO(dal, events);
         StructureBO structurebo = new StructureBO(dal);
+        ContentBO contentBO = new ContentBO(dal);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                MainFrame frame = new MainFrame(chapterBO, structurebo, events);
+            	MainFrame frame = new MainFrame(chapterBO, structurebo, contentBO, events);
                 frame.setVisible(true);
             }
         });

@@ -101,5 +101,5 @@ public class MySQLComponentContentDAO implements ComponentContentDAO {
 	        throw new DataAccessException("Could not delete content.", e);
 	    }
 	}
-	}
+	
 }
