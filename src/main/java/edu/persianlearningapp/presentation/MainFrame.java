@@ -3,20 +3,29 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
 import edu.persianlearningapp.business.ChapterBO;
+import edu.persianlearningapp.business.GlossaryBO;
 import edu.persianlearningapp.observer.LearningEventSource;
 
 import javax.swing.JFrame;
+import javax.swing.JTabbedPane;
 import java.awt.ComponentOrientation;
 
 public class MainFrame extends JFrame {
     private static final long serialVersionUID = 1L;
 
-    public MainFrame(ChapterBO chapterBO, LearningEventSource events) {
+    public MainFrame(ChapterBO chapterBO, GlossaryBO glossaryBO, LearningEventSource events) {
         super("فارسی سیکھنے کی ایپ");
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setContentPane(new ChapterManagementPanel(chapterBO, events)) ;
-        setFontRecursively(getContentPane(), new Font("Arial", Font.PLAIN, 30));
+
+        ChapterManagementPanel chapterPanel = new ChapterManagementPanel(chapterBO, events);
+        setFontRecursively(chapterPanel, new Font("Arial", Font.PLAIN, 30));
+
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("ابواب", chapterPanel);
+        tabs.addTab("لغت", new GlossaryManagementPanel(glossaryBO));
+        setContentPane(tabs);
+
         applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         setSize(900, 600);
         setLocationRelativeTo(null);
