@@ -96,7 +96,7 @@ public class ChapterManagementPanel extends JPanel implements Observer {
             int chapterId = chapterBO.createChapter(title);
             showMessage("باب محفوظ ہوگیا۔ شناخت: " + chapterId);
         } catch (BusinessException e) {
-            showError("عنوان خالی یا ۲۵۵ حروف سے زیادہ نہیں ہونا چاہیے۔");
+            showError(e.getMessage());
         } catch (RuntimeException e) {
             showError("باب محفوظ نہیں ہو سکا۔ ڈیٹا بیس کا کنکشن چیک کریں۔");
         }
@@ -136,7 +136,7 @@ public class ChapterManagementPanel extends JPanel implements Observer {
             chapterBO.renameChapter(selected.getId(), title);
             showMessage("باب کا عنوان تبدیل ہوگیا۔");
         } catch (BusinessException e) {
-            showError("عنوان خالی یا ۲۵۵ حروف سے زیادہ نہیں ہونا چاہیے۔");
+            showError(e.getMessage());
         } catch (RuntimeException e) {
             showError("عنوان تبدیل نہیں ہو سکا۔");
         }
