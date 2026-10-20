@@ -1,40 +1,71 @@
 package edu.persianlearningapp.presentation;
+
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
+import java.awt.ComponentOrientation;
+
 import edu.persianlearningapp.business.ChapterBO;
 import edu.persianlearningapp.business.GlossaryBO;
+import edu.persianlearningapp.business.StructureBO;
 import edu.persianlearningapp.observer.LearningEventSource;
 
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
-import java.awt.ComponentOrientation;
 
 public class MainFrame extends JFrame {
+
     private static final long serialVersionUID = 1L;
 
-    public MainFrame(ChapterBO chapterBO, GlossaryBO glossaryBO, LearningEventSource events) {
+    public MainFrame(ChapterBO chapterBO, StructureBO structurebo,
+                     GlossaryBO glossaryBO, LearningEventSource events) {
         super("فارسی سیکھنے کی ایپ");
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        ChapterManagementPanel chapterPanel = new ChapterManagementPanel(chapterBO, events);
-        setFontRecursively(chapterPanel, new Font("Arial", Font.PLAIN, 30));
-
+        // Main navigation tabs
         JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("ابواب", chapterPanel);
-        tabs.addTab("لغت", new GlossaryManagementPanel(glossaryBO));
+
+        // Existing chapter management screen
+        ChapterManagementPanel chapterPanel =
+                new ChapterManagementPanel(chapterBO, events);
+
+        tabs.addTab("ابواب کا انتظام", chapterPanel);
+
+        // Chapter components management screen
+        StructureManagementPanel structurePanel =
+                new StructureManagementPanel(structurebo, chapterBO);
+
+        tabs.addTab("اجزاء کا انتظام", structurePanel);
+
+        // Glossary management screen (UC-04)
+        GlossaryManagementPanel glossaryPanel =
+                new GlossaryManagementPanel(glossaryBO);
+
+        tabs.addTab("لغت", glossaryPanel);
+
         setContentPane(tabs);
 
-        applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        setFontRecursively(
+                getContentPane(),
+                new Font("Arial", Font.PLAIN, 30)
+        );
+
+        applyComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT
+        );
+
         setSize(900, 600);
         setLocationRelativeTo(null);
     }
+
     private void setFontRecursively(Component component, Font font) {
+
         component.setFont(font);
 
         if (component instanceof Container) {
-            Component[] children = ((Container) component).getComponents();
+            Component[] children =
+                    ((Container) component).getComponents();
 
             for (Component child : children) {
                 setFontRecursively(child, font);
