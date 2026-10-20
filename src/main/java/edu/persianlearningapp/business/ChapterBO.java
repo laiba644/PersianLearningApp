@@ -27,7 +27,7 @@ public class ChapterBO {
         requirePositiveId(chapterId);
         Chapter chapter = dal.findById(chapterId);
         if (chapter == null) {
-            throw new BusinessException("Chapter not found: " + chapterId);
+            throw new BusinessException("باب موجود نہیں ہے۔ شناخت: " + chapterId);
         }
         return chapter;
     }
@@ -38,7 +38,7 @@ public class ChapterBO {
         requireUniqueTitle(cleanTitle, chapterId);
         boolean updated = dal.updateTitle(chapterId, cleanTitle);
         if (!updated) {
-            throw new BusinessException("Chapter not found: " + chapterId);
+            throw new BusinessException("باب موجود نہیں ہے۔ شناخت: " + chapterId);
         }
         events.publish(new LearningEvent("CHAPTER_UPDATED", chapterId));
     }
@@ -49,7 +49,7 @@ public class ChapterBO {
         }
         boolean deleted = dal.deleteById(chapterId);
         if (!deleted) {
-            throw new BusinessException("Chapter not found: " + chapterId);
+            throw new BusinessException("باب موجود نہیں ہے۔ شناخت: " + chapterId);
         }
         events.publish(new LearningEvent("CHAPTER_DELETED", chapterId));
     }
@@ -60,16 +60,16 @@ public class ChapterBO {
     }
     private String validateAndCleanTitle(String title) {
         if (title == null) {
-            throw new BusinessException("Title is required.");
+            throw new BusinessException("باب کا عنوان درج کریں۔");
         }
         String cleanTitle = title.trim();
         if (cleanTitle.isEmpty()) {
-            throw new BusinessException("Title is required.");
+            throw new BusinessException("باب کا عنوان درج کریں۔");
         }
         int characterCount = cleanTitle.codePointCount(0, cleanTitle.length());
         
         if (characterCount > MAX_TITLE_LENGTH) {
-            throw new BusinessException("Title cannot exceed 255 characters.");
+            throw new BusinessException("عنوان ۲۵۵ حروف سے زیادہ نہیں ہو سکتا۔ا");
         }
         String scriptPattern =
                 "[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF"
@@ -86,7 +86,7 @@ public class ChapterBO {
     }
     private void requirePositiveId(int chapterId) {
         if (chapterId <= 0) {
-            throw new BusinessException("Chapter id must be positive.");
+            throw new BusinessException("باب کی شناخت صفر سے بڑی ہونی چاہیے۔");
         }
     }
 }
