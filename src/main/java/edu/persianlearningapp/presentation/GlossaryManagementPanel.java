@@ -10,6 +10,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 
 /**
  * UC-04 Swing panel: Manage Chapter Glossary.
@@ -354,6 +358,7 @@ public class GlossaryManagementPanel extends JPanel {
         field.setFont(rtlFont);
         field.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         field.setHorizontalAlignment(SwingConstants.RIGHT);
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new NoLatinFilter());
         return field;
     }
 
@@ -531,6 +536,35 @@ public class GlossaryManagementPanel extends JPanel {
      * displaying all required Persian and Urdu characters.
      */
     private static Font resolveRtlFont() {
+    	/** Blocks English (Latin) letters, including pasted text. */
+    	
         return new Font("Arial", Font.PLAIN, 30);
     }
+    /** Blocks English (Latin) letters, including pasted text. */
+    private static class NoLatinFilter extends DocumentFilter {
+        private static String clean(String s) {
+            if (s == null) return null;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < s.length(); i++) {
+                char ch = s.charAt(i);
+                if (Character.UnicodeScript.of(ch) != Character.UnicodeScript.LATIN) {
+                    sb.append(ch);
+                }
+            }
+            return sb.toString();
+        }
+
+        @Override
+        public void insertString(FilterBypass fb, int offset, String text,
+                                 AttributeSet attr) throws BadLocationException {
+            super.insertString(fb, offset, clean(text), attr);
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String text,
+                            AttributeSet attrs) throws BadLocationException {
+            super.replace(fb, offset, length, clean(text), attrs);
+        }
+    }
+
 }

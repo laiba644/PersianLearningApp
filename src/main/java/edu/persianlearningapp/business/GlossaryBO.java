@@ -30,6 +30,14 @@ public class GlossaryBO {
     // Dependency injected via constructor (no hard-wired DAOs here).
     // ----------------------------------------------------------------
     private final IDALFacade dal;
+    private static boolean hasLatin(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (Character.UnicodeScript.of(s.charAt(i)) == Character.UnicodeScript.LATIN) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public GlossaryBO(IDALFacade dal) {
         this.dal = dal;
@@ -70,7 +78,11 @@ public class GlossaryBO {
         "اردو معنی 1000 حروف "
         + "سے زیادہ نہیں "
         + "ہو سکتے۔";
+    static final String MSG_PERSIAN_LATIN =
+    	    "فارسی لفظ میں انگریزی حروف نہیں ہو سکتے۔";
 
+    	static final String MSG_URDU_LATIN =
+    	    "اردو معنی میں انگریزی حروف نہیں ہو سکتے۔";
     // (This entry does not exist in this chapter.)
     static final String MSG_ENTRY_NOT_FOUND =
         "یہ اندراج اس باب "
@@ -233,6 +245,9 @@ public class GlossaryBO {
         if (word.isEmpty()) {
             throw new BusinessException(MSG_PERSIAN_BLANK);
         }
+        if (hasLatin(word)) {
+            throw new BusinessException(MSG_PERSIAN_LATIN);
+        }
         if (word.length() > MAX_PERSIAN_LENGTH) {
             throw new BusinessException(MSG_PERSIAN_TOO_LONG);
         }
@@ -248,6 +263,9 @@ public class GlossaryBO {
         }
         if (meaning.length() > MAX_URDU_LENGTH) {
             throw new BusinessException(MSG_URDU_TOO_LONG);
+        }
+        if (hasLatin(meaning)) {
+            throw new BusinessException(MSG_URDU_LATIN);
         }
     }
 
@@ -277,4 +295,8 @@ public class GlossaryBO {
         // Not found in this chapter.
         throw new BusinessException(MSG_ENTRY_NOT_FOUND);
     }
+    /**
+     * Return true if the text contains any English (Latin) letter.
+     */
+   
 }
