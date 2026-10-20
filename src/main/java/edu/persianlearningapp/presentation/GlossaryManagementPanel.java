@@ -14,7 +14,7 @@ import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
-
+import edu.persianlearningapp.dao.DataAccessException;
 /**
  * UC-04 Swing panel: Manage Chapter Glossary.
  *
@@ -126,7 +126,10 @@ public class GlossaryManagementPanel extends JPanel {
     // "خرابی"  (Error)
     private static final String TITLE_ERROR =
         "خرابی";
-
+ // "ڈیٹا بیس میں خرابی ہے۔ براہ کرم دوبارہ کوشش کریں۔"
+    private static final String MSG_DB_ERROR =
+        "ڈیٹا بیس میں خرابی ہے۔ "
+        + "براہ کرم دوبارہ کوشش کریں۔";
     // ------------------------------------------------------------------
     // Instance fields
     // ------------------------------------------------------------------
@@ -384,6 +387,8 @@ public class GlossaryManagementPanel extends JPanel {
         } catch (BusinessException ex) {
             // Show the Urdu error message; leave the typed text intact (BR-07).
             showError(ex.getMessage());
+        } catch (DataAccessException ex) {
+            showError(MSG_DB_ERROR);
         }
     }
 
@@ -413,6 +418,8 @@ public class GlossaryManagementPanel extends JPanel {
             clearFields();
         } catch (BusinessException ex) {
             showError(ex.getMessage());
+        } catch (DataAccessException ex) {
+            showError(MSG_DB_ERROR);
         }
     }
 
@@ -424,6 +431,7 @@ public class GlossaryManagementPanel extends JPanel {
      *
      * SRS: FR-GL-05, BR-04, NFR-US-05
      */
+  
     private void handleDelete() {
         int selectedRow = entryTable.getSelectedRow();
         if (selectedRow < 0) {
@@ -455,6 +463,9 @@ public class GlossaryManagementPanel extends JPanel {
             }
         } catch (BusinessException ex) {
             showError(ex.getMessage());
+            refreshTable();
+        } catch (DataAccessException ex) {
+            showError(MSG_DB_ERROR);
         }
     }
 
@@ -483,9 +494,10 @@ public class GlossaryManagementPanel extends JPanel {
             }
         } catch (BusinessException ex) {
             showError(ex.getMessage());
+        } catch (DataAccessException ex) {
+            showError(MSG_DB_ERROR);
         }
     }
-
     /**
      * When the user selects a row in the table, pre-fill the text fields
      * with that row's Persian word and Urdu meaning so editing is easy.
