@@ -14,6 +14,7 @@ public class ChapterBO {
     }
     public int createChapter(String title) {
         String cleanTitle = validateAndCleanTitle(title);
+        requireUniqueTitle(cleanTitle, 0);
         Chapter chapter = new Chapter(0, cleanTitle);
         int chapterId = dal.insert(chapter);
         events.publish(new LearningEvent("CHAPTER_CREATED", chapterId));
@@ -33,6 +34,8 @@ public class ChapterBO {
     public void renameChapter(int chapterId, String title) {
         requirePositiveId(chapterId);
         String cleanTitle = validateAndCleanTitle(title);
+        getChapter(chapterId);
+        requireUniqueTitle(cleanTitle, chapterId);
         boolean updated = dal.updateTitle(chapterId, cleanTitle);
         if (!updated) {
             throw new BusinessException("Chapter not found: " + chapterId);
@@ -49,6 +52,11 @@ public class ChapterBO {
             throw new BusinessException("Chapter not found: " + chapterId);
         }
         events.publish(new LearningEvent("CHAPTER_DELETED", chapterId));
+    }
+    private void requireUniqueTitle(String title, int excludedChapterId) {
+        if (dal.existsByTitleExceptId(title, excludedChapterId)) {
+            throw new BusinessException("اس عنوان کا باب پہلے سے موجود ہے۔");
+        }
     }
     private String validateAndCleanTitle(String title) {
         if (title == null) {
