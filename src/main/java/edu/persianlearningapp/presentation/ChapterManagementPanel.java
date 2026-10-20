@@ -46,7 +46,7 @@ public class ChapterManagementPanel extends JPanel implements Observer {
                         list, value, index, selected, focused);
 
                 Chapter chapter = (Chapter) value;
-                label.setText(chapter.getTitle() + "  |  " + chapter.getId());
+                label.setText(chapter.getId() + "  |  " + chapter.getTitle());
                 label.setComponentOrientation(
                         ComponentOrientation.RIGHT_TO_LEFT);
                 return label;
