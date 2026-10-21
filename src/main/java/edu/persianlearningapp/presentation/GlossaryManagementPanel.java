@@ -17,7 +17,8 @@ import javax.swing.text.DocumentFilter;
 import edu.persianlearningapp.dao.DataAccessException;
 import edu.persianlearningapp.domain.Chapter;
 import javax.swing.table.DefaultTableCellRenderer;
-
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 public class GlossaryManagementPanel extends JPanel {
 
     private static final int COL_ENTRY_ID     = 0;  // hidden column
@@ -115,7 +116,7 @@ public class GlossaryManagementPanel extends JPanel {
 
     /** Font used for all Persian and Urdu text (NFR-US-04). */
     private final Font rtlFont;
-
+    private JButton addBtn;
     public GlossaryManagementPanel(GlossaryBO glossaryBO) {
         this.glossaryBO = glossaryBO;
         this.rtlFont    = resolveRtlFont();
@@ -134,6 +135,8 @@ public class GlossaryManagementPanel extends JPanel {
         entryTable   = buildTable();
         persianField = buildRtlTextField(20);
         urduField    = buildRtlTextField(30);
+        watchField(persianField);
+        watchField(urduField);
         chapterBox = buildChapterBox();
         setLayout(new BorderLayout(6, 6));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -141,6 +144,7 @@ public class GlossaryManagementPanel extends JPanel {
         add(buildNorthPanel(),  BorderLayout.NORTH);
         add(new JScrollPane(entryTable), BorderLayout.CENTER);
         add(buildSouthPanel(), BorderLayout.SOUTH);
+        updateButtons();
         loadChapters();
     }
 
@@ -165,9 +169,9 @@ public class GlossaryManagementPanel extends JPanel {
             }
         });
 
-        north.add(refreshBtn);
-        north.add(chapterBox);
         north.add(chapLabel);
+        north.add(chapterBox);
+        north.add(refreshBtn);
         JLabel title = new JLabel("لغت کا انتظام", SwingConstants.CENTER);
         title.setFont(rtlFont);
 
@@ -207,7 +211,8 @@ public class GlossaryManagementPanel extends JPanel {
 
         // Row 2: Add, Edit, Delete buttons (right-aligned)
         JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        buttonRow.add(buildAddButton());
+        addBtn = buildAddButton();
+        buttonRow.add(addBtn);
         buttonRow.add(buildEditButton());
         buttonRow.add(buildDeleteButton());
 
@@ -462,6 +467,28 @@ public class GlossaryManagementPanel extends JPanel {
     private void clearFields() {
         persianField.setText("");
         urduField.setText("");
+    }
+    /** Re-check the buttons whenever the text in a field changes. */
+    private void watchField(JTextField field) {
+        field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e)  { updateButtons(); }
+            @Override public void removeUpdate(DocumentEvent e)  { updateButtons(); }
+            @Override public void changedUpdate(DocumentEvent e) { updateButtons(); }
+        });
+    }
+
+    /** True when both the Persian word and the Urdu meaning have some text. */
+    private boolean hasText() {
+        return !persianField.getText().trim().isEmpty()
+            && !urduField.getText().trim().isEmpty();
+    }
+
+    /** Enable each button only when its action makes sense. */
+    private void updateButtons() {
+        if (addBtn == null) {
+            return;   // panel is still being built
+        }
+        addBtn.setEnabled(hasText());
     }
     private void showError(String message) {
         // Set dialog text direction to right-to-left so Urdu reads naturally.
