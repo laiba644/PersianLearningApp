@@ -38,10 +38,10 @@ import javax.swing.SwingUtilities;
 public class StructureManagementPanel extends JPanel implements Observer {
 
     private static final long serialVersionUID = 1L;
-
+    // business layer say existing structure ko access krnay k liye or new add krnay k liye
     private final StructureBO structureBO;
     private final ChapterBO chapterBO;
-
+    // swing 
     private final JComboBox<String> chapterComboBox =
             new JComboBox<String>();
 
@@ -63,7 +63,7 @@ public class StructureManagementPanel extends JPanel implements Observer {
     private final JButton clearButton = new JButton("خانے صاف کریں");
 
     private boolean loadingChapters;
-
+    // observer pattern + jo start say MainFrame say objects aa rhay hain (Singleton pattern)
     public StructureManagementPanel(
             StructureBO structureBO,
             ChapterBO chapterBO,
@@ -71,7 +71,7 @@ public class StructureManagementPanel extends JPanel implements Observer {
 
         this.structureBO = structureBO;
         this.chapterBO = chapterBO;
-
+        
         setLayout(new BorderLayout(10, 10));
 
         JLabel heading = new JLabel(
@@ -289,16 +289,20 @@ public class StructureManagementPanel extends JPanel implements Observer {
 
     private JPanel createMainPanel() {
         JPanel mainPanel = new JPanel(new BorderLayout(10, 15));
+        mainPanel.setComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT);
+
         JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT);
 
         inputPanel.setBorder(BorderFactory.createTitledBorder(
                 "نئے جزو کی تفصیلات"));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.LINE_END;
 
+        // Label on the right, input on its left.
         addInput(inputPanel, gbc, 0,
                 "باب منتخب کریں:", chapterComboBox);
 
@@ -311,6 +315,9 @@ public class StructureManagementPanel extends JPanel implements Observer {
         mainPanel.add(inputPanel, BorderLayout.NORTH);
 
         JPanel listPanel = new JPanel(new BorderLayout(5, 5));
+        listPanel.setComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT);
+
         listPanel.setBorder(BorderFactory.createTitledBorder(
                 "باب کے اجزاء کی فہرست"));
 
@@ -327,6 +334,11 @@ public class StructureManagementPanel extends JPanel implements Observer {
         return mainPanel;
     }
 
+    /**
+     * NOTE: The panel is RIGHT_TO_LEFT, so GridBagLayout mirrors the
+     * columns: gridx = 0 is the RIGHT-most column and gridx = 1 is to
+     * its left. Hence label -> gridx 0 (right), input -> gridx 1 (left).
+     */
     private void addInput(
             JPanel panel,
             GridBagConstraints gbc,
@@ -335,12 +347,20 @@ public class StructureManagementPanel extends JPanel implements Observer {
             Component input) {
 
         gbc.gridy = row;
-        gbc.gridx = 1;
-        gbc.weightx = 0;
-        panel.add(new JLabel(labelText), gbc);
+        gbc.weighty = 0;
 
+        // Right column: label (fixed-ish width).
         gbc.gridx = 0;
-        gbc.weightx = 1;
+        gbc.weightx = 0.30;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.LINE_START;
+        panel.add(label, gbc);
+
+        // Left column: dropdown or input field (takes remaining width).
+        gbc.gridx = 1;
+        gbc.weightx = 0.70;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.LINE_END;
         panel.add(input, gbc);
     }
 
