@@ -1,4 +1,3 @@
-
 package edu.persianlearningapp.presentation;
 
 import edu.persianlearningapp.business.ChapterBO;
@@ -38,10 +37,10 @@ import javax.swing.SwingUtilities;
 public class StructureManagementPanel extends JPanel implements Observer {
 
     private static final long serialVersionUID = 1L;
-
+    // business layer say existing structure ko access krnay k liye or new add krnay k liye
     private final StructureBO structureBO;
     private final ChapterBO chapterBO;
-
+    // swing 
     private final JComboBox<String> chapterComboBox =
             new JComboBox<String>();
 
@@ -55,15 +54,15 @@ public class StructureManagementPanel extends JPanel implements Observer {
 
     private final JList<ChapterComponent> componentList =
             new JList<ChapterComponent>(componentModel);
-
+    // buttons ki list
     private final JButton addButton = new JButton("جزو شامل کریں");
     private final JButton deleteButton = new JButton("جزو حذف کریں");
     private final JButton saveButton = new JButton("ساخت محفوظ کریں");
     private final JButton refreshButton = new JButton("تازہ کریں");
     private final JButton clearButton = new JButton("خانے صاف کریں");
-
+    // data base say chapters k load honay tak k time ko mange krnay k liye
     private boolean loadingChapters;
-
+    // observer pattern + jo start say MainFrame say objects aa rhay hain (Singleton pattern)
     public StructureManagementPanel(
             StructureBO structureBO,
             ChapterBO chapterBO,
@@ -71,7 +70,7 @@ public class StructureManagementPanel extends JPanel implements Observer {
 
         this.structureBO = structureBO;
         this.chapterBO = chapterBO;
-
+        
         setLayout(new BorderLayout(10, 10));
 
         JLabel heading = new JLabel(
@@ -82,7 +81,7 @@ public class StructureManagementPanel extends JPanel implements Observer {
 
         componentList.setSelectionMode(
                 ListSelectionModel.SINGLE_SELECTION);
-
+        
         loadChapters();
 
         chapterComboBox.addActionListener(event -> {
@@ -106,13 +105,11 @@ public class StructureManagementPanel extends JPanel implements Observer {
         loadSelectedStructure();
         updateActionButtons();
 
-        // Subscribe this panel to chapter-related notifications.
+        // observer pattern - observer ko add kr rhay hain
         eventSource.addObserver(this);
     }
 
-    /**
-     * Enables or disables buttons according to current selections.
-     */
+   // update button states matlab content load honay par buttons ko active krna
     private void updateActionButtons() {
         boolean hasChapter = chapterComboBox.getSelectedIndex() > 0;
         boolean hasComponent = componentList.getSelectedValue() != null;
@@ -133,16 +130,9 @@ public class StructureManagementPanel extends JPanel implements Observer {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list,
-                    Object value,
-                    int index,
-                    boolean selected,
-                    boolean focused) {
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focused) {
 
-                JLabel label = (JLabel)
-                        super.getListCellRendererComponent(
-                                list, value, index, selected, focused);
+                JLabel label = (JLabel)super.getListCellRendererComponent(list, value, index, selected, focused);
 
                 if (value instanceof ComponentType) {
                     label.setText(
@@ -218,9 +208,11 @@ public class StructureManagementPanel extends JPanel implements Observer {
      * chapter by ID. This method does not reload the component list
      * when the selected chapter still exists.
      */
+    
+    // chapters reload krna or load krnay k liye
     private void loadChapters() {
         int selectedChapterId = -1;
-
+        
         if (chapterComboBox.getSelectedIndex() > 0) {
             try {
                 selectedChapterId = getSelectedChapterId();
@@ -269,6 +261,7 @@ public class StructureManagementPanel extends JPanel implements Observer {
     /**
      * Receives notifications from the shared LearningEventSource.
      */
+    // oberveable view ko notify/update krnay k liye
     @Override
     public void update(Observable subject) {
         if (!(subject instanceof LearningEventSource)) {
@@ -289,16 +282,20 @@ public class StructureManagementPanel extends JPanel implements Observer {
 
     private JPanel createMainPanel() {
         JPanel mainPanel = new JPanel(new BorderLayout(10, 15));
+        mainPanel.setComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT);
+
         JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT);
 
         inputPanel.setBorder(BorderFactory.createTitledBorder(
                 "نئے جزو کی تفصیلات"));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.LINE_END;
 
+        // Label on the right, input on its left.
         addInput(inputPanel, gbc, 0,
                 "باب منتخب کریں:", chapterComboBox);
 
@@ -311,22 +308,30 @@ public class StructureManagementPanel extends JPanel implements Observer {
         mainPanel.add(inputPanel, BorderLayout.NORTH);
 
         JPanel listPanel = new JPanel(new BorderLayout(5, 5));
+        listPanel.setComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT);
+
         listPanel.setBorder(BorderFactory.createTitledBorder(
                 "باب کے اجزاء کی فہرست"));
 
-        listPanel.add(
-                new JLabel("شامل کیے گئے اجزاء", JLabel.CENTER),
-                BorderLayout.NORTH);
+        JLabel listHeading = new JLabel(
+                "شامل کیے گئے اجزاء", JLabel.CENTER);
+        listHeading.setComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT);
 
-        listPanel.add(
-                new JScrollPane(componentList),
-                BorderLayout.CENTER);
+        listPanel.add(listHeading, BorderLayout.NORTH);
+        listPanel.add(new JScrollPane(componentList), BorderLayout.CENTER);
 
         mainPanel.add(listPanel, BorderLayout.CENTER);
 
         return mainPanel;
     }
 
+    /**
+     * NOTE: The panel is RIGHT_TO_LEFT, so GridBagLayout mirrors the
+     * columns: gridx = 0 is the RIGHT-most column and gridx = 1 is to
+     * its left. Hence label -> gridx 0 (right), input -> gridx 1 (left).
+     */
     private void addInput(
             JPanel panel,
             GridBagConstraints gbc,
@@ -334,13 +339,29 @@ public class StructureManagementPanel extends JPanel implements Observer {
             String labelText,
             Component input) {
 
-        gbc.gridy = row;
-        gbc.gridx = 1;
-        gbc.weightx = 0;
-        panel.add(new JLabel(labelText), gbc);
+        JLabel label = new JLabel(labelText, JLabel.RIGHT);
+        label.setHorizontalAlignment(JLabel.RIGHT);
+        label.setComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT);
 
+        input.setComponentOrientation(
+                ComponentOrientation.RIGHT_TO_LEFT);
+
+        gbc.gridy = row;
+        gbc.weighty = 0;
+
+        // Right column: label (fixed-ish width).
         gbc.gridx = 0;
-        gbc.weightx = 1;
+        gbc.weightx = 0.30;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.LINE_START;
+        panel.add(label, gbc);
+
+        // Left column: dropdown or input field (takes remaining width).
+        gbc.gridx = 1;
+        gbc.weightx = 0.70;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.LINE_END;
         panel.add(input, gbc);
     }
 
