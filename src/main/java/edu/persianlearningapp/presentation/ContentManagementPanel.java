@@ -20,7 +20,8 @@ import java.util.List;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 
-
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import edu.persianlearningapp.observer.LearningEventSource;
 import edu.persianlearningapp.observer.Observable;
 import edu.persianlearningapp.observer.Observer;
@@ -35,7 +36,7 @@ public class ContentManagementPanel extends JPanel implements Observer{
     private final JButton saveButton = new JButton("محفوظ کرنا");
     private final JButton deleteButton = new JButton("مواد ختم کریں");
     private final JButton refreshButton = new JButton("تازہ کریں");
-    
+    private boolean contentExists = false;
     private final List<Chapter> chapters = new ArrayList<>();
     private final List<ChapterComponent> components = new ArrayList<>();
     private boolean loadingChapters = false;
@@ -86,15 +87,60 @@ public class ContentManagementPanel extends JPanel implements Observer{
         chapterComboBox.addActionListener(e -> {
             if (!loadingChapters) {
                 loadComponents();
+                updateActionButtons();
             }
         });
-        componentComboBox.addActionListener(e -> loadContent());
+		DocumentListener textListener = new DocumentListener() {
+		
+		    @Override
+		    public void insertUpdate(DocumentEvent e) {
+		        updateActionButtons();
+		    }
+		
+		    @Override
+		    public void removeUpdate(DocumentEvent e) {
+		        updateActionButtons();
+		    }
+		
+		    @Override
+		    public void changedUpdate(DocumentEvent e) {
+		        updateActionButtons();
+		    }
+		};
+		
+		persianArea.getDocument().addDocumentListener(textListener);
+		urduArea.getDocument().addDocumentListener(textListener);
+		
+		updateActionButtons();
+
+		componentComboBox.addActionListener(e -> {
+		    loadContent();
+		    updateActionButtons();
+		});
         loadChapters();
+        
         applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         eventSource.addObserver(this);
     }
 
+	private void updateActionButtons() {	
+	    int chapterIndex = chapterComboBox.getSelectedIndex();
+	    int componentIndex = componentComboBox.getSelectedIndex();
+	    boolean hasSelection =
+	            chapterIndex >= 0 &&
+	            chapterIndex < chapters.size() &&
+	            componentIndex >= 0 &&
+	            componentIndex < components.size();
+	    boolean hasInput =
+	            !persianArea.getText().trim().isEmpty() ||
+	            !urduArea.getText().trim().isEmpty();
+	    saveButton.setEnabled(hasSelection && hasInput);
+	    deleteButton.setEnabled(hasSelection && contentExists);
+	    refreshButton.setEnabled(true);
+	}
+
 	private void loadChapters() {
+		contentExists = false;
 		loadingChapters = true;
 	    chapterComboBox.removeAllItems();
 	    componentComboBox.removeAllItems();
@@ -156,7 +202,7 @@ public class ContentManagementPanel extends JPanel implements Observer{
 	}
 
 	private void loadContent() {
-	
+		contentExists = false;
 	    persianArea.setText("");
 	    urduArea.setText("");
 	    int chapterIndex = chapterComboBox.getSelectedIndex();
@@ -175,8 +221,9 @@ public class ContentManagementPanel extends JPanel implements Observer{
 	                contentBO.getContent(chapterId, componentId);
 	
 	        if (content != null) {
-	
+	        	contentExists = true;
 	            persianArea.setText(content.getPersianContent());
+	            
 	            urduArea.setText(content.getUrduContent());
 	        }	
 	    } catch (RuntimeException e) {
@@ -184,6 +231,7 @@ public class ContentManagementPanel extends JPanel implements Observer{
 	        JOptionPane.showMessageDialog(
 	            this,"	مواد لوڈ نہیں ہو سک" + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE
 	        );
+	        updateActionButtons();
 	    }
 	}
 
