@@ -488,7 +488,22 @@ public class GlossaryManagementPanel extends JPanel {
         return !persianField.getText().trim().isEmpty()
             && !urduField.getText().trim().isEmpty();
     }
-
+    /** True if the boxes differ from the selected entry, so Edit has something to save. */
+    private boolean selectionChanged() {
+        int row = entryTable.getSelectedRow();
+        if (row < 0) {
+            return false;
+        }
+        String word    = String.valueOf(tableModel.getValueAt(row, COL_PERSIAN_WORD));
+        String meaning = String.valueOf(tableModel.getValueAt(row, COL_URDU_MEANING));
+        if (!persianField.getText().trim().equals(word)) {
+            return true;
+        }
+        if (!urduField.getText().trim().equals(meaning)) {
+            return true;
+        }
+        return false;
+    }
     /** Enable each button only when its action makes sense. */
     private void updateButtons() {
         if (addBtn == null || editBtn == null || deleteBtn == null) {
@@ -496,7 +511,7 @@ public class GlossaryManagementPanel extends JPanel {
         }
         boolean hasRow = entryTable.getSelectedRow() >= 0;
         addBtn.setEnabled(hasText());
-        editBtn.setEnabled(hasRow && hasText());
+        editBtn.setEnabled(hasRow && hasText() && selectionChanged());
         deleteBtn.setEnabled(hasRow);
     }
     private void showError(String message) {
