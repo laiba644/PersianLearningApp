@@ -8,6 +8,7 @@ import edu.persianlearningapp.domain.ComponentType;
 import edu.persianlearningapp.observer.LearningEventSource;
 import edu.persianlearningapp.observer.Observable;
 import edu.persianlearningapp.observer.Observer;
+import edu.persianlearningapp.domain.LearningEvent;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -35,7 +36,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
 public class StructureManagementPanel extends JPanel implements Observer {
-
+	private final LearningEventSource eventSource;
     private static final long serialVersionUID = 1L;
     // business layer say existing structure ko access krnay k liye or new add krnay k liye
     private final StructureBO structureBO;
@@ -70,7 +71,8 @@ public class StructureManagementPanel extends JPanel implements Observer {
 
         this.structureBO = structureBO;
         this.chapterBO = chapterBO;
-        
+        this.eventSource = eventSource;
+        componentTypeComboBox.removeItem(ComponentType.EXERCISES);
         setLayout(new BorderLayout(10, 10));
 
         JLabel heading = new JLabel(
@@ -529,6 +531,10 @@ public class StructureManagementPanel extends JPanel implements Observer {
 
             structureBO.saveStructure(chapterId, components);
             loadSelectedStructure();
+
+            eventSource.publish(
+                new LearningEvent("STRUCTURE_UPDATED", chapterId)
+            );
 
             JOptionPane.showMessageDialog(
                     this,

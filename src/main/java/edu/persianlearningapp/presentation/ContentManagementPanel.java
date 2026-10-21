@@ -1,5 +1,5 @@
 package edu.persianlearningapp.presentation;
-
+import edu.persianlearningapp.domain.LearningEvent;
 import edu.persianlearningapp.business.ContentBO;
 import edu.persianlearningapp.business.ChapterBO;
 import edu.persianlearningapp.domain.ChapterComponent;
@@ -27,6 +27,7 @@ import edu.persianlearningapp.observer.Observable;
 import edu.persianlearningapp.observer.Observer;
 import javax.swing.SwingUtilities;
 public class ContentManagementPanel extends JPanel implements Observer{
+	private boolean loadingComponents = false;
     private final ContentBO contentBO;
     private final ChapterBO chapterBO;
     private final JComboBox<String> chapterComboBox = new JComboBox<>();
@@ -114,8 +115,10 @@ public class ContentManagementPanel extends JPanel implements Observer{
 		updateActionButtons();
 
 		componentComboBox.addActionListener(e -> {
-		    loadContent();
-		    updateActionButtons();
+		    if (!loadingComponents) {
+		        loadContent();
+		        updateActionButtons();
+		    }
 		});
         loadChapters();
         
@@ -325,13 +328,14 @@ public class ContentManagementPanel extends JPanel implements Observer{
 
             case "GLOSSARY":
                 return "فرہنگ";
-            case "CHAPTER_CONTENT":
+            case "LESSON_TEXT":
                 return "باب کا متن";
 
             default:
                 return type;
         }
     }
+
 
 	@Override
 	public void update(Observable subject) {
@@ -340,10 +344,124 @@ public class ContentManagementPanel extends JPanel implements Observer{
 	        return;
 	    }
 	
+	    LearningEvent event =
+	        ((LearningEventSource) subject).getLatestEvent();
+	
+	    if (event == null) {
+	        return;
+	    }
+	
+	    Runnable refresh = () -> {
+	
+	        if ("STRUCTURE_UPDATED".equals(event.getType())) {
+	
+	            int index = chapterComboBox.getSelectedIndex();
+	
+	            if (index >= 0 && index < chapters.size()) {
+	
+	                int selectedChapterId = chapters.get(index).getId();
+	
+	                if (selectedChapterId == event.getChapterId()) {
+	                    refreshComponentsFromEvent();
+	                }
+	            }
+	
+	        } else if (
+	            "CHAPTER_CREATED".equals(event.getType()) ||
+	            "CHAPTER_UPDATED".equals(event.getType()) ||
+	            "CHAPTER_DELETED".equals(event.getType())) {
+	
+	            refreshChaptersFromEvent();
+	        }
+	    };
+	
 	    if (SwingUtilities.isEventDispatchThread()) {
-	        refreshChaptersFromEvent();
+	        refresh.run();
 	    } else {
-	        SwingUtilities.invokeLater(() -> refreshChaptersFromEvent());
+	        SwingUtilities.invokeLater(refresh);
+	    }
+	}
+
+
+	private void refreshComponentsFromEvent() {
+	
+	    int chapterIndex = chapterComboBox.getSelectedIndex();
+	
+	    if (chapterIndex < 0 || chapterIndex >= chapters.size()) {
+	        return;
+	    }
+	
+	    int oldComponentId = -1;
+	    int oldIndex = componentComboBox.getSelectedIndex();
+	
+	    if (oldIndex >= 0 && oldIndex < components.size()) {
+	        oldComponentId = components.get(oldIndex).getId();
+	    }
+	
+	    // Remember current text and saved-content status
+	    String oldPersian = persianArea.getText();
+	    String oldUrdu = urduArea.getText();
+	    boolean oldContentExists = contentExists;
+	
+	    try {
+	        int chapterId = chapters.get(chapterIndex).getId();
+	
+	        List<ChapterComponent> latestComponents =
+	                contentBO.listConfiguredComponents(chapterId);
+	
+	        int newSelectedIndex = -1;
+	
+	        loadingComponents = true;
+	
+	        try {
+	            componentComboBox.removeAllItems();
+	            components.clear();
+	
+	            for (ChapterComponent component : latestComponents) {
+	
+	                if (component.getId() == oldComponentId) {
+	                    newSelectedIndex = components.size();
+	                }
+	
+	                components.add(component);
+	
+	                componentComboBox.addItem(
+	                    component.getDisplayOrder() + " - "
+	                    + componentNameInUrdu(component.getComponentType())
+	                );
+	            }
+	
+	            componentComboBox.setSelectedIndex(newSelectedIndex);
+	
+	        } finally {
+	            loadingComponents = false;
+	        }
+	
+	        if (newSelectedIndex >= 0) {
+	
+	            // Same component still exists: preserve text
+	            persianArea.setText(oldPersian);
+	            urduArea.setText(oldUrdu);
+	            contentExists = oldContentExists;
+	
+	        } else {
+	
+	            // Previously selected component no longer exists
+	            persianArea.setText("");
+	            urduArea.setText("");
+	            contentExists = false;
+	        }
+	
+	        updateActionButtons();
+	
+	    } catch (RuntimeException e) {
+	
+	        JOptionPane.showMessageDialog(
+	            this,
+	            "اجزاء دوبارہ لوڈ نہیں ہو سکے: " + e.getMessage(),
+	            "خرابی",
+	            JOptionPane.ERROR_MESSAGE
+	        );
 	    }
 	}
 
@@ -352,6 +470,7 @@ public class ContentManagementPanel extends JPanel implements Observer{
 	    int oldIndex = chapterComboBox.getSelectedIndex();
 	    int oldChapterId = -1;
 	
+	    // Remember the previously selected chapter
 	    if (oldIndex >= 0 && oldIndex < chapters.size()) {
 	        oldChapterId = chapters.get(oldIndex).getId();
 	    }
@@ -373,6 +492,7 @@ public class ContentManagementPanel extends JPanel implements Observer{
 	            }
 	
 	            chapters.add(chapter);
+	
 	            chapterComboBox.addItem(
 	                chapter.getId() + " - " + chapter.getTitle()
 	            );
@@ -381,20 +501,29 @@ public class ContentManagementPanel extends JPanel implements Observer{
 	        chapterComboBox.setSelectedIndex(newIndex);
 	
 	    } catch (RuntimeException e) {
-	        JOptionPane.showMessageDialog(this,
-	            "فصل‌ها بارگذاری نشدند: " + e.getMessage());
+	
+	        JOptionPane.showMessageDialog(
+	            this,
+	            "ابواب دوبارہ لوڈ نہیں ہو سکے: " + e.getMessage(),
+	            "خرابی",
+	            JOptionPane.ERROR_MESSAGE
+	        );
+	
 	        return;
 	
 	    } finally {
 	        loadingChapters = false;
 	    }
 	
+	    // Clear components if selected chapter was deleted
 	    if (oldChapterId > 0 &&
 	        chapterComboBox.getSelectedIndex() == -1) {
+	
 	        loadComponents();
 	    }
+	
+	    updateActionButtons();
 	}
-
 
 
 }
