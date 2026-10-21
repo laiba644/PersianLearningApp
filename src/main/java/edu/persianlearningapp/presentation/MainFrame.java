@@ -42,7 +42,7 @@ public class MainFrame extends JFrame {
         
      //UC3
         ContentManagementPanel contentPanel =
-                new ContentManagementPanel(contentBO, chapterBO);
+        		new ContentManagementPanel(contentBO, chapterBO, events);
 
         tabs.addTab("تعلیمی مواد کا انتظام", contentPanel);
 
