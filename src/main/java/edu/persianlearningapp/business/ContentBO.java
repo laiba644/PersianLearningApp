@@ -39,6 +39,21 @@ public class ContentBO {
 
     		    throw new BusinessException("Enter Urdu or Persian content.");
     		}
+    	if ((persian == null || persian.trim().isEmpty()) &&
+    		    (urdu == null || urdu.trim().isEmpty())) {
+
+    		    throw new BusinessException("فارسی یا اردو میں مواد درج کریں۔");
+    		}
+
+    		if (!isPersianUrduText(persian)) {
+    		    throw new BusinessException(
+    		        "فارسی متن میں انگریزی یا اعداد کی اجازت نہیں ہے۔");
+    		}
+
+    		if (!isPersianUrduText(urdu)) {
+    		    throw new BusinessException(
+    		        "اردو متن میں انگریزی یا اعداد کی اجازت نہیں ہے۔");
+    		}
     	boolean saved= dal.saveContent(chapterId, componentId, persian, urdu);
     	
     	if(!saved) {
@@ -46,6 +61,61 @@ public class ContentBO {
     	}
     		
     }
+
+	private boolean isPersianUrduText(String text) {
+	
+	    // One language field may be empty
+	    if (text == null || text.trim().isEmpty()) {
+	        return true;
+	    }
+	
+	    boolean hasLetter = false;
+	
+	    for (int i = 0; i < text.length();) {
+	
+	        int c = text.codePointAt(i);
+	        i += Character.charCount(c);
+	
+	        // Reject numbers
+	        if (Character.isDigit(c)) {
+	            return false;
+	        }
+	
+	        // Accept Arabic-script letters used in Persian and Urdu
+	        if (Character.UnicodeScript.of(c)
+	                == Character.UnicodeScript.ARABIC
+	                && Character.isLetter(c)) {
+	
+	            hasLetter = true;
+	            continue;
+	        }
+	
+	        // Accept Arabic vowel marks
+	        int type = Character.getType(c);
+	
+	        if ((type == Character.NON_SPACING_MARK
+	                || type == Character.COMBINING_SPACING_MARK)
+	                && Character.UnicodeBlock.of(c)
+	                == Character.UnicodeBlock.ARABIC) {
+	            continue;
+	        }
+	
+	        // Allow spaces, punctuation and joined words
+	        if (Character.isWhitespace(c)
+	                || Character.isSpaceChar(c)
+	                || c == 0x200C
+	                || c == 0x200D
+	                || ".,!?;:()[]-«»“”'\"،؛؟۔".indexOf(c) >= 0) {
+	            continue;
+	        }
+	
+	        // Reject English and other unsupported characters
+	        return false;
+	    }
+	
+	    return hasLetter;
+	}
+
     public void removeContent(int chapterId, int componentId) { 
     	
     	if (componentId <= 0) {
