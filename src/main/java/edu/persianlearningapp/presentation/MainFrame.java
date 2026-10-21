@@ -34,7 +34,7 @@ public class MainFrame extends JFrame {
 
         // Chapter components management screen
         StructureManagementPanel structurePanel =
-                new StructureManagementPanel(structurebo, chapterBO);
+                new StructureManagementPanel(structurebo, chapterBO, events);
 
         tabs.addTab("اجزاء کا انتظام", structurePanel);
 

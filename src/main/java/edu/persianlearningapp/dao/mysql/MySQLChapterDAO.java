@@ -141,6 +141,28 @@ public class MySQLChapterDAO implements ChapterDAO {
         }
     }
 
+    @Override
+    public boolean existsByTitleExceptId(
+            String title, int excludedChapterId) {
+
+        String sql = "SELECT 1 FROM chapters "
+                + "WHERE title = ? AND chapter_id <> ? LIMIT 1";
+
+        try (Connection connection = DatabaseConnection.open();
+             PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(1, title);
+            statement.setInt(2, excludedChapterId);
+
+            try (ResultSet results = statement.executeQuery()) {
+                return results.next();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(
+                    "Could not check the chapter title.", e);
+        }
+    }
     private Chapter readChapter(ResultSet results) throws SQLException {
         Chapter chapter = new Chapter(
                 results.getInt("chapter_id"),
