@@ -28,9 +28,9 @@ public class ContentManagementPanel extends JPanel {
     private final JComboBox<String> componentComboBox = new JComboBox<>();
     private final JTextArea persianArea = new JTextArea(5, 30);
     private final JTextArea urduArea = new JTextArea(5, 30);
-    private final JButton saveButton = new JButton("Save Content");
-    private final JButton deleteButton = new JButton("Delete Content");
-    private final JButton refreshButton = new JButton("Refresh");
+    private final JButton saveButton = new JButton("محفوظ کرنا");
+    private final JButton deleteButton = new JButton("مواد ختم کریں");
+    private final JButton refreshButton = new JButton("تازہ کریں");
     
     private final List<Chapter> chapters = new ArrayList<>();
     private final List<ChapterComponent> components = new ArrayList<>();
@@ -44,9 +44,9 @@ public class ContentManagementPanel extends JPanel {
         //chapter component selection
         JPanel selectionPanel = new JPanel(new GridLayout(2, 2, 10, 10));
 
-        selectionPanel.add(new JLabel("Select Chapter:"));
+        selectionPanel.add(new JLabel("باب منتخب کریں"));
         selectionPanel.add(chapterComboBox);
-        selectionPanel.add(new JLabel("Select Component:"));
+        selectionPanel.add(new JLabel("حصہ منتخب کریں"));
         selectionPanel.add(componentComboBox);
         add(selectionPanel, BorderLayout.NORTH);
         //persian ya urdu kay content area
@@ -60,11 +60,11 @@ public class ContentManagementPanel extends JPanel {
         urduArea.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
         JPanel persianPanel = new JPanel(new BorderLayout());
-        persianPanel.add(new JLabel("Persian Content:"), BorderLayout.NORTH);
+        persianPanel.add(new JLabel("فارسی مواد"), BorderLayout.NORTH);
         persianPanel.add(new JScrollPane(persianArea), BorderLayout.CENTER);
         
         JPanel urduPanel = new JPanel(new BorderLayout());
-        urduPanel.add(new JLabel("Urdu Content:"), BorderLayout.NORTH);
+        urduPanel.add(new JLabel("اردو مواد"), BorderLayout.NORTH);
         urduPanel.add(new JScrollPane(urduArea), BorderLayout.CENTER);
         textPanel.add(persianPanel);
         textPanel.add(urduPanel);
@@ -86,6 +86,7 @@ public class ContentManagementPanel extends JPanel {
         });
         componentComboBox.addActionListener(e -> loadContent());
         loadChapters();
+        applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
     }
 
 	private void loadChapters() {
@@ -136,7 +137,7 @@ public class ContentManagementPanel extends JPanel {
 	            components.add(component);
 	            componentComboBox.addItem(
 	                component.getDisplayOrder() + " - "
-	                + component.getComponentType()
+	                + componentNameInUrdu(component.getComponentType())
 	            );
 	        }
 	    } catch (RuntimeException e) {
@@ -176,10 +177,7 @@ public class ContentManagementPanel extends JPanel {
 	    } catch (RuntimeException e) {
 	
 	        JOptionPane.showMessageDialog(
-	            this,
-	            "Could not load content: " + e.getMessage(),
-	            "Error",
-	            JOptionPane.ERROR_MESSAGE
+	            this,"	مواد لوڈ نہیں ہو سک" + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE
 	        );
 	    }
 	}
@@ -191,7 +189,7 @@ public class ContentManagementPanel extends JPanel {
 	    int componentIndex = componentComboBox.getSelectedIndex();
 	
 	    if (chapterIndex < 0 || componentIndex < 0) {
-	        JOptionPane.showMessageDialog(this, "Please select a chapter and component.");
+	        JOptionPane.showMessageDialog(this, "برائے مہربانی ایک باب اور جزو منتخب کریں۔");
 	        return;
 	    }
 	
@@ -204,14 +202,14 @@ public class ContentManagementPanel extends JPanel {
 	    try {
 	        contentBO.saveContent(chapterId, componentId, persian, urdu);
 	
-	        JOptionPane.showMessageDialog(this, "Content saved successfully.");
+	        JOptionPane.showMessageDialog(this, "مواد کامیابی سے محفوظ ہو گیا۔");
 	
 	        loadContent();
 	
 	    } catch (RuntimeException e) {
 	        JOptionPane.showMessageDialog(
 	            this,
-	            "Could not save content: " + e.getMessage(),
+	            "مواد محفوظ نہیں ہو سکا" + e.getMessage(),
 	            "Error",
 	            JOptionPane.ERROR_MESSAGE
 	        );
@@ -222,36 +220,63 @@ public class ContentManagementPanel extends JPanel {
 	    int chapterIndex = chapterComboBox.getSelectedIndex();
 	    int componentIndex = componentComboBox.getSelectedIndex();
 	    if (chapterIndex < 0 || componentIndex < 0) {
-	        JOptionPane.showMessageDialog(this, "Please select a chapter and component.");
+	        JOptionPane.showMessageDialog(this, "	برائے مہربانی ایک باب اور جزو منتخب کریں۔");
 	        return;
 	    }
 	    int chapterId = chapters.get(chapterIndex).getId();
 	    int componentId = components.get(componentIndex).getId();
 	    int choice = JOptionPane.showConfirmDialog(
-	        this,
-	        "Are you sure you want to delete this content?",
-	        "Confirm Delete",
-	        JOptionPane.YES_NO_OPTION
-	    );
+	        this,"Are you sure you want to delete this content?","	ڈیلیٹ کرنے کی تصدیق کریں",JOptionPane.YES_NO_OPTION);
 	    if (choice != JOptionPane.YES_OPTION) {
 	        return;
 	    }
 	    try {
 	        contentBO.removeContent(chapterId, componentId);
-	        JOptionPane.showMessageDialog(this, "Content deleted successfully.");
+	        JOptionPane.showMessageDialog(this, "مواد کامیابی سے ڈیلیٹ ہو گیا۔");
 	        loadContent();
 	    } catch (RuntimeException e) {
 	        JOptionPane.showMessageDialog(
 	            this,
-	            "Could not delete content: " + e.getMessage(),
+	            "مواد ڈیلیٹ نہیں ہو سک" + e.getMessage(),
 	            "Error",
 	            JOptionPane.ERROR_MESSAGE
 	        );
 	    }
 	}
-
-
     public ContentBO getContentBO() {
         return contentBO;
     }
+    private String componentNameInUrdu(String type) {
+
+        switch (type) {
+            case "LEARNING_OBJECTIVES":
+                return "سیکھنے کے مقاصد";
+
+            case "PERSIAN_DIALOGUE":
+                return "فارسی مکالمہ";
+
+            case "PERSIAN_READING_PASSAGE":
+                return "فارسی پڑھنے کا متن";
+
+            case "URDU_TRANSLATION_OR_EXPLANATION":
+                return "اردو ترجمہ یا وضاحت";
+
+            case "GRAMMAR_OR_LANGUAGE_NOTE":
+                return "قواعد اور زبان کے نکات";
+
+            case "EXAMPLES":
+                return "مثالیں";
+
+            case "EXERCISES":
+                return "مشقیں";
+
+            case "GLOSSARY":
+                return "فرہنگ";
+
+            default:
+                return type;
+        }
+    }
+
+
 }
