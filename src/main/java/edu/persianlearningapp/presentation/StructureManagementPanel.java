@@ -194,10 +194,8 @@ public class StructureManagementPanel extends JPanel implements Observer {
                 return "گرامر یا زبان کا نوٹ";
             case EXAMPLES:
                 return "مثالیں";
-            case EXERCISES:
-                return "مشقیں";
-            case GLOSSARY:
-                return "لغت";
+            case LESSON_TEXT:
+            	return "سبق کا متن";
             default:
                 return typename.name();
         }
