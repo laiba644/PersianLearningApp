@@ -35,7 +35,7 @@ public class MainFrame extends JFrame {
 //        StructureBO structureBO = new StructureBO();
 
         StructureManagementPanel structurePanel =
-                new StructureManagementPanel(structurebo, chapterBO);
+                new StructureManagementPanel(structurebo, chapterBO, events);
 
         tabs.addTab("اجزاء کا انتظام", structurePanel);
 
