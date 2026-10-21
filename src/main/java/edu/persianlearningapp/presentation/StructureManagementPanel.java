@@ -6,6 +6,9 @@ import edu.persianlearningapp.business.StructureBO;
 import edu.persianlearningapp.domain.Chapter;
 import edu.persianlearningapp.domain.ChapterComponent;
 import edu.persianlearningapp.domain.ComponentType;
+import edu.persianlearningapp.observer.LearningEventSource;
+import edu.persianlearningapp.observer.Observable;
+import edu.persianlearningapp.observer.Observer;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -29,8 +32,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 
-public class StructureManagementPanel extends JPanel {
+public class StructureManagementPanel extends JPanel implements Observer {
 
     private static final long serialVersionUID = 1L;
 
@@ -51,11 +56,18 @@ public class StructureManagementPanel extends JPanel {
     private final JList<ChapterComponent> componentList =
             new JList<ChapterComponent>(componentModel);
 
+    private final JButton addButton = new JButton("جزو شامل کریں");
+    private final JButton deleteButton = new JButton("جزو حذف کریں");
+    private final JButton saveButton = new JButton("ساخت محفوظ کریں");
+    private final JButton refreshButton = new JButton("تازہ کریں");
+    private final JButton clearButton = new JButton("خانے صاف کریں");
+
     private boolean loadingChapters;
 
     public StructureManagementPanel(
             StructureBO structureBO,
-            ChapterBO chapterBO) {
+            ChapterBO chapterBO,
+            LearningEventSource eventSource) {
 
         this.structureBO = structureBO;
         this.chapterBO = chapterBO;
@@ -67,11 +79,22 @@ public class StructureManagementPanel extends JPanel {
         add(heading, BorderLayout.NORTH);
 
         configureRenderers();
+
+        componentList.setSelectionMode(
+                ListSelectionModel.SINGLE_SELECTION);
+
         loadChapters();
 
         chapterComboBox.addActionListener(event -> {
             if (!loadingChapters) {
                 loadSelectedStructure();
+                updateActionButtons();
+            }
+        });
+
+        componentList.addListSelectionListener(event -> {
+            if (!event.getValueIsAdjusting()) {
+                updateActionButtons();
             }
         });
 
@@ -79,7 +102,30 @@ public class StructureManagementPanel extends JPanel {
         add(createButtons(), BorderLayout.SOUTH);
 
         applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
         loadSelectedStructure();
+        updateActionButtons();
+
+        // Subscribe this panel to chapter-related notifications.
+        eventSource.addObserver(this);
+    }
+
+    /**
+     * Enables or disables buttons according to current selections.
+     */
+    private void updateActionButtons() {
+        boolean hasChapter = chapterComboBox.getSelectedIndex() > 0;
+        boolean hasComponent = componentList.getSelectedValue() != null;
+
+        addButton.setEnabled(hasChapter);
+        saveButton.setEnabled(hasChapter);
+        refreshButton.setEnabled(hasChapter);
+        deleteButton.setEnabled(hasChapter && hasComponent);
+
+        clearButton.setEnabled(true);
+
+        componentTypeComboBox.setEnabled(hasChapter);
+        displayOrderField.setEnabled(hasChapter);
     }
 
     private void configureRenderers() {
@@ -88,18 +134,24 @@ public class StructureManagementPanel extends JPanel {
 
             @Override
             public Component getListCellRendererComponent(
-                    JList<?> list, Object value, int index,
-                    boolean selected, boolean focused) {
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean selected,
+                    boolean focused) {
 
-                JLabel label = (JLabel) super.getListCellRendererComponent(
-                        list, value, index, selected, focused);
+                JLabel label = (JLabel)
+                        super.getListCellRendererComponent(
+                                list, value, index, selected, focused);
 
                 if (value instanceof ComponentType) {
-                    label.setText(typeLabel((ComponentType) value));
+                    label.setText(
+                            typeLabel((ComponentType) value));
                 }
 
                 label.setComponentOrientation(
                         ComponentOrientation.RIGHT_TO_LEFT);
+
                 return label;
             }
         });
@@ -109,16 +161,21 @@ public class StructureManagementPanel extends JPanel {
 
             @Override
             public Component getListCellRendererComponent(
-                    JList<?> list, Object value, int index,
-                    boolean selected, boolean focused) {
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean selected,
+                    boolean focused) {
 
-                JLabel label = (JLabel) super.getListCellRendererComponent(
-                        list, value, index, selected, focused);
+                JLabel label = (JLabel)
+                        super.getListCellRendererComponent(
+                                list, value, index, selected, focused);
 
                 if (value instanceof ChapterComponent) {
                     ChapterComponent item = (ChapterComponent) value;
-                    ComponentType type =
-                            ComponentType.valueOf(item.getComponentType());
+
+                    ComponentType type = ComponentType.valueOf(
+                            item.getComponentType());
 
                     label.setText(
                             item.getDisplayOrder() + "  |  "
@@ -127,6 +184,7 @@ public class StructureManagementPanel extends JPanel {
 
                 label.setComponentOrientation(
                         ComponentOrientation.RIGHT_TO_LEFT);
+
                 return label;
             }
         });
@@ -155,22 +213,77 @@ public class StructureManagementPanel extends JPanel {
         }
     }
 
+    /**
+     * Reloads the chapter dropdown while preserving the selected
+     * chapter by ID. This method does not reload the component list
+     * when the selected chapter still exists.
+     */
     private void loadChapters() {
-        loadingChapters = true;
-        chapterComboBox.removeAllItems();
-        chapterComboBox.addItem("باب منتخب کریں");
+        int selectedChapterId = -1;
+
+        if (chapterComboBox.getSelectedIndex() > 0) {
+            try {
+                selectedChapterId = getSelectedChapterId();
+            } catch (IllegalArgumentException e) {
+                selectedChapterId = -1;
+            }
+        }
 
         try {
+            // Fetch first, so a database error does not clear the list.
             List<Chapter> chapters = chapterBO.listChapters();
+
+            loadingChapters = true;
+
+            chapterComboBox.removeAllItems();
+            chapterComboBox.addItem("باب منتخب کریں");
+
+            int selectedIndex = 0;
 
             for (Chapter chapter : chapters) {
                 chapterComboBox.addItem(
                         chapter.getTitle() + "  |  " + chapter.getId());
+
+                if (chapter.getId() == selectedChapterId) {
+                    selectedIndex = chapterComboBox.getItemCount() - 1;
+                }
             }
+
+            chapterComboBox.setSelectedIndex(selectedIndex);
+
+            // The previously selected chapter no longer exists.
+            if (selectedChapterId > 0 && selectedIndex == 0) {
+                componentModel.clear();
+                componentList.clearSelection();
+                clearFields();
+            }
+
         } catch (RuntimeException e) {
-            showError("ابواب کی فہرست نہیں کھل سکی۔ ڈیٹا بیس چیک کریں۔");
+            showError("ابواب کی فہرست نہیں کھل سکی۔");
         } finally {
             loadingChapters = false;
+            updateActionButtons();
+        }
+    }
+
+    /**
+     * Receives notifications from the shared LearningEventSource.
+     */
+    @Override
+    public void update(Observable subject) {
+        if (!(subject instanceof LearningEventSource)) {
+            return;
+        }
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            loadChapters();
+        } else {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    loadChapters();
+                }
+            });
         }
     }
 
@@ -188,8 +301,10 @@ public class StructureManagementPanel extends JPanel {
 
         addInput(inputPanel, gbc, 0,
                 "باب منتخب کریں:", chapterComboBox);
+
         addInput(inputPanel, gbc, 1,
                 "باب کا جزو:", componentTypeComboBox);
+
         addInput(inputPanel, gbc, 2,
                 "ترتیبِ نمائش:", displayOrderField);
 
@@ -202,15 +317,22 @@ public class StructureManagementPanel extends JPanel {
         listPanel.add(
                 new JLabel("شامل کیے گئے اجزاء", JLabel.CENTER),
                 BorderLayout.NORTH);
-        listPanel.add(new JScrollPane(componentList), BorderLayout.CENTER);
+
+        listPanel.add(
+                new JScrollPane(componentList),
+                BorderLayout.CENTER);
 
         mainPanel.add(listPanel, BorderLayout.CENTER);
+
         return mainPanel;
     }
 
     private void addInput(
-            JPanel panel, GridBagConstraints gbc, int row,
-            String labelText, Component input) {
+            JPanel panel,
+            GridBagConstraints gbc,
+            int row,
+            String labelText,
+            Component input) {
 
         gbc.gridy = row;
         gbc.gridx = 1;
@@ -223,13 +345,8 @@ public class StructureManagementPanel extends JPanel {
     }
 
     private JPanel createButtons() {
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
-
-        JButton addButton = new JButton("جزو شامل کریں");
-        JButton deleteButton = new JButton("جزو حذف کریں");
-        JButton saveButton = new JButton("ساخت محفوظ کریں");
-        JButton refreshButton = new JButton("تازہ کریں");
-        JButton clearButton = new JButton("خانے صاف کریں");
+        JPanel buttons = new JPanel(
+                new FlowLayout(FlowLayout.CENTER));
 
         addButton.addActionListener(event -> addComponent());
         deleteButton.addActionListener(event -> deleteComponent());
@@ -248,36 +365,47 @@ public class StructureManagementPanel extends JPanel {
 
     private int getSelectedChapterId() {
         if (chapterComboBox.getSelectedIndex() <= 0) {
-            throw new IllegalArgumentException("پہلے ایک باب منتخب کریں۔");
+            throw new IllegalArgumentException(
+                    "پہلے ایک باب منتخب کریں۔");
         }
 
-        String selected = (String) chapterComboBox.getSelectedItem();
+        String selected =
+                (String) chapterComboBox.getSelectedItem();
+
         int separator = selected.lastIndexOf('|');
 
         if (separator < 0) {
-            throw new IllegalArgumentException("منتخب باب درست نہیں ہے۔");
+            throw new IllegalArgumentException(
+                    "منتخب باب درست نہیں ہے۔");
         }
 
-        return Integer.parseInt(selected.substring(separator + 1).trim());
+        return Integer.parseInt(
+                selected.substring(separator + 1).trim());
     }
 
     private void loadSelectedStructure() {
         componentModel.clear();
 
         if (chapterComboBox.getSelectedIndex() <= 0) {
+            updateActionButtons();
             return;
         }
 
         try {
             int chapterId = getSelectedChapterId();
+
             List<ChapterComponent> components =
                     structureBO.getStructure(chapterId);
 
             for (ChapterComponent component : components) {
                 componentModel.addElement(component);
             }
+
         } catch (RuntimeException e) {
-            showError("باب کی ساخت لوڈ نہیں ہو سکی: " + e.getMessage());
+            showError(
+                    "باب کی ساخت لوڈ نہیں ہو سکی: " + e.getMessage());
+        } finally {
+            updateActionButtons();
         }
     }
 
@@ -294,15 +422,18 @@ public class StructureManagementPanel extends JPanel {
             }
 
             int order;
+
             try {
-                order = Integer.parseInt(displayOrderField.getText().trim());
+                order = Integer.parseInt(
+                        displayOrderField.getText().trim());
             } catch (NumberFormatException e) {
                 showError("ترتیبِ نمائش میں درست عدد درج کریں۔");
                 return;
             }
 
             if (order <= 0) {
-                showError("ترتیبِ نمائش مثبت عدد ہونی چاہیے۔");
+                showError(
+                        "ترتیبِ نمائش مثبت عدد ہونی چاہیے۔");
                 return;
             }
 
@@ -328,6 +459,8 @@ public class StructureManagementPanel extends JPanel {
 
         } catch (IllegalArgumentException e) {
             showError(e.getMessage());
+        } finally {
+            updateActionButtons();
         }
     }
 
@@ -335,12 +468,13 @@ public class StructureManagementPanel extends JPanel {
         int selectedIndex = componentList.getSelectedIndex();
 
         if (selectedIndex < 0) {
-            showError("پہلے فہرست سے ایک جزو منتخب کریں۔");
+            updateActionButtons();
             return;
         }
 
         componentModel.remove(selectedIndex);
         sortComponents();
+        updateActionButtons();
     }
 
     private void sortComponents() {
@@ -359,6 +493,8 @@ public class StructureManagementPanel extends JPanel {
         for (ChapterComponent component : sorted) {
             componentModel.addElement(component);
         }
+
+        updateActionButtons();
     }
 
     private void saveStructure() {
@@ -382,7 +518,10 @@ public class StructureManagementPanel extends JPanel {
                     JOptionPane.INFORMATION_MESSAGE);
 
         } catch (RuntimeException e) {
-            showError("ساخت محفوظ نہیں ہو سکی: " + e.getMessage());
+            showError(
+                    "ساخت محفوظ نہیں ہو سکی: " + e.getMessage());
+        } finally {
+            updateActionButtons();
         }
     }
 
@@ -390,10 +529,15 @@ public class StructureManagementPanel extends JPanel {
         displayOrderField.setText("");
         componentTypeComboBox.setSelectedIndex(0);
         displayOrderField.requestFocusInWindow();
+
+        updateActionButtons();
     }
 
     private void showError(String message) {
         JOptionPane.showMessageDialog(
-                this, message, "خرابی", JOptionPane.ERROR_MESSAGE);
+                this,
+                message,
+                "خرابی",
+                JOptionPane.ERROR_MESSAGE);
     }
 }
