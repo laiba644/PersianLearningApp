@@ -325,6 +325,8 @@ public class ContentManagementPanel extends JPanel implements Observer{
 
             case "GLOSSARY":
                 return "فرہنگ";
+            case "CHAPTER_CONTENT":
+                return "باب کا متن";
 
             default:
                 return type;
