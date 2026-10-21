@@ -1,5 +1,5 @@
 package edu.persianlearningapp.presentation;
-
+import javax.swing.ListSelectionModel;
 import edu.persianlearningapp.business.BusinessException;
 import edu.persianlearningapp.business.ChapterBO;
 import edu.persianlearningapp.domain.Chapter;
@@ -28,7 +28,9 @@ public class ChapterManagementPanel extends JPanel implements Observer {
     private final ChapterBO chapterBO;
     private final DefaultListModel<Chapter> chapterModel = new DefaultListModel<Chapter>();
     private final JList<Chapter> chapterList = new JList<Chapter>(chapterModel);
-
+    private final JButton viewButton = new JButton("باب دیکھیں");
+    private final JButton renameButton = new JButton("عنوان تبدیل کریں");
+    private final JButton deleteButton = new JButton("حذف کریں");
     public ChapterManagementPanel( ChapterBO chapterBO, LearningEventSource eventSource) {
         this.chapterBO = chapterBO;
 
@@ -46,7 +48,7 @@ public class ChapterManagementPanel extends JPanel implements Observer {
                         list, value, index, selected, focused);
 
                 Chapter chapter = (Chapter) value;
-                label.setText(chapter.getTitle() + "  |  " + chapter.getId());
+                label.setText(chapter.getId() + "  |  " + chapter.getTitle());
                 label.setComponentOrientation(
                         ComponentOrientation.RIGHT_TO_LEFT);
                 return label;
@@ -57,17 +59,31 @@ public class ChapterManagementPanel extends JPanel implements Observer {
         add(createButtons(), BorderLayout.SOUTH);
 
         applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+        chapterList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        chapterList.addListSelectionListener(event -> {
+            if (!event.getValueIsAdjusting()) {
+                updateActionButtons();
+            }
+        });
+
+        updateActionButtons();
+
         eventSource.addObserver(this);
         loadChapters();
     }
+    private void updateActionButtons() {
+        boolean hasSelection = chapterList.getSelectedValue() != null;
 
+        viewButton.setEnabled(hasSelection);
+        renameButton.setEnabled(hasSelection);
+        deleteButton.setEnabled(hasSelection);
+    }
     private JPanel createButtons() {
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
         JButton createButton = new JButton("نیا باب");
-        JButton viewButton = new JButton("باب دیکھیں");
-        JButton renameButton = new JButton("عنوان تبدیل کریں");
-        JButton deleteButton = new JButton("حذف کریں");
         JButton refreshButton = new JButton("فہرست تازہ کریں");
 
         createButton.addActionListener(event -> createChapter());
@@ -96,7 +112,7 @@ public class ChapterManagementPanel extends JPanel implements Observer {
             int chapterId = chapterBO.createChapter(title);
             showMessage("باب محفوظ ہوگیا۔ شناخت: " + chapterId);
         } catch (BusinessException e) {
-            showError("عنوان خالی یا ۲۵۵ حروف سے زیادہ نہیں ہونا چاہیے۔");
+            showError(e.getMessage());
         } catch (RuntimeException e) {
             showError("باب محفوظ نہیں ہو سکا۔ ڈیٹا بیس کا کنکشن چیک کریں۔");
         }
@@ -136,7 +152,7 @@ public class ChapterManagementPanel extends JPanel implements Observer {
             chapterBO.renameChapter(selected.getId(), title);
             showMessage("باب کا عنوان تبدیل ہوگیا۔");
         } catch (BusinessException e) {
-            showError("عنوان خالی یا ۲۵۵ حروف سے زیادہ نہیں ہونا چاہیے۔");
+            showError(e.getMessage());
         } catch (RuntimeException e) {
             showError("عنوان تبدیل نہیں ہو سکا۔");
         }
