@@ -26,4 +26,10 @@ public class DALFacade implements IDALFacade {
     public int insert(GlossaryEntry value) { return glossary.insert(value); }
     public boolean update(GlossaryEntry value) { return glossary.update(value); }
     public boolean delete(int chapterId, int entryId) { return glossary.delete(chapterId, entryId); }
+    @Override
+    public boolean existsByTitleExceptId(
+            String title, int excludedChapterId) {
+
+        return chapters.existsByTitleExceptId(title, excludedChapterId);
+    }
 }
