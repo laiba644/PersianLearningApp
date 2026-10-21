@@ -1,134 +1,410 @@
-# Persian Learning App — Team Baseline
+<div align="center">
 
-A Java 8, no-Maven Eclipse **skeleton** for the four assigned use cases. It contains class names, method signatures, shared contracts, domain data classes, schema, and TODO placeholders. The BO rules and all four MySQL DAO implementations are intentionally left for the assigned members. It is not a finished application.
+# Persian Learning App
+### فارسی سیکھنے کی ایپ
 
-## Team ownership
+A desktop application for managing Persian learning chapters,
+instructional content, and Persian–Urdu vocabulary.
 
-| Member | Use case | Presentation | Business | DAO / database | Tests |
-|---|---|---|---|---|---|
-| Laiba | UC-01 Manage chapters | `ChapterManagementPanel` | `ChapterBO` | `ChapterDAO`, `MySQLChapterDAO` | `ChapterBOTest` |
-| Zohaib | UC-02 Configure chapter structure | `StructureManagementPanel` | `StructureBO` | `ComponentDAO`, `MySQLComponentDAO` | `StructureBOTest` |
-| Faseeh | UC-03 Manage instructional content | `ContentManagementPanel` | `ContentBO` | `ComponentContentDAO`, `MySQLComponentContentDAO` | `ContentBOTest` |
-| Rabia | UC-04 Manage glossary | `GlossaryManagementPanel` | `GlossaryBO` | `GlossaryDAO`, `MySQLGlossaryDAO` | `GlossaryBOTest` |
+**Java 8 · Swing · JDBC · MySQL-compatible database · Eclipse**
 
-Each member completes all three layers for their use case: presentation, business, and DAO/data access. Shared domain, factory, facade, observer, and database schema changes should be discussed and reviewed by the group before merging.
+Software Construction & Development — Group Project
 
-## Project layout and patterns
+</div>
 
-- `domain`: chapter, component, content, glossary, and event model classes.
-- `presentation`: Swing screens. Screens call business objects and contain no SQL.
-- `business`: business rules and validation.
-- `dao`: DAO contracts, factory contracts, and `IDALFacade`.
-- `dao/mysql`: JDBC implementations, `DALFacade`, and connection setup.
-- `observer`: Observer pattern contracts/event source.
-- `src/test/java`: JUnit 5 business-layer tests and shared hand-written `StubDALFacade`.
-- `design`: Mermaid domain model and layer map.
-- `database/schema.sql`: schema for the project's local database.
+---
 
-Patterns represented: DAO, Business Object (BO), Facade, Abstract Factory/Factory, and Observer.
+## Overview
 
-## Implementation status
+Persian Learning App provides an administrative workspace for preparing
+chapter-based learning material.
 
-The four BO classes and four MySQL DAO classes contain TODO placeholders only; they do not perform use-case logic or SQL yet. The four Swing panels are presentation shells and need controls/actions. Tests are placeholders and need assertions. Shared domain classes, DAO contracts, DAL facade/factory wiring, database connection setup, and Observer contracts are provided as team scaffolding. Running the app opens only a placeholder window until the team connects the screens and services.
+The project is organised around four use cases: chapter management,
+chapter structure, instructional content, and glossary management.
+Each team member owns the presentation, business, and data-access
+implementation of one use case.
 
-The earlier team baseline had some BO/DAO logic prefilled. This Pure Skeleton intentionally removes that use-case implementation so each member can implement all assigned layers.
+The application uses Persian and Urdu text, with right-to-left
+presentation in its Swing interface.
 
-## Requirements and open decisions
+## Current Development Status
 
-The group should confirm these with the instructor before implementing behavior that depends on them:
+Use-case implementations have been developed on the members' feature
+branches. Integration and review are ongoing.
 
-1. Can a chapter structure include the same component type more than once? What ordering rules apply?
-2. Which administrative chapter details are required beyond the title?
-3. Must every instructional component contain both Persian and Urdu text?
-4. FR-7 mentions exercises and cascade deletion, but the provided use-case list does not define an exercise use case or fields. Confirm the exercise scope before adding a table.
-5. FR-10 distinguishes study from exam display for the glossary. Confirm whether learner study/exam screens are in this iteration.
-6. Confirm which Observer listener(s) the instructor expects; the shared Observer contracts are provided, and the team should agree which listeners/events to connect.
+| Area | Current position |
+|---|---|
+| UC-01: Chapter management | Implemented; validation and usability improvements ongoing |
+| UC-02: Chapter structure | Implementation developed on Zohaib's branch |
+| UC-03: Instructional content | Implementation developed on Faseeh's branch |
+| UC-04: Chapter glossary | Implementation developed on Rabia's branch; integration review ongoing |
+| Combined application | Integration of all four use cases is in progress |
+| Formal unit testing | Scheduled for the next iteration |
 
-The schema creates `chapters`, `chapter_components`, `component_contents`, and `glossary_entries`. Foreign keys cascade chapter deletion to related chapter data and component deletion to its content. Exercises are not modeled until requirements are confirmed.
+> The screens available when running the app depend on the checked-out
+> branch. A feature branch may not yet contain another member's latest
+> changes. Fetching branches does not automatically merge their code.
 
-## Setup in Eclipse 2026 (no Maven)
+## Team and Responsibilities
 
-### 1. Extract and import
+| Member | Use case | Presentation class | Business class | JDBC DAO |
+|---|---|---|---|---|
+| Laiba | UC-01: Manage Chapters | `ChapterManagementPanel` | `ChapterBO` | `MySQLChapterDAO` |
+| Zohaib | UC-02: Configure Chapter Structure | `StructureManagementPanel` | `StructureBO` | `MySQLComponentDAO` |
+| Faseeh | UC-03: Manage Instructional Content | `ContentManagementPanel` | `ContentBO` | `MySQLComponentContentDAO` |
+| Rabia | UC-04: Manage Chapter Glossary | `GlossaryManagementPanel` | `GlossaryBO` | `MySQLGlossaryDAO` |
 
-1. Extract this ZIP to a normal folder (not inside Eclipse's workspace `.metadata` folder).
-2. In Eclipse choose **File → Import → General → Existing Projects into Workspace**.
-3. Select the extracted `PersianLearningApp_PureSkeleton` folder, keep **Copy projects into workspace** unchecked if importing directly from that folder, then click **Finish**.
-4. Install/select a **JDK 8** in **Window → Preferences → Java → Installed JREs**. In project **Properties → Java Compiler**, set compliance to **1.8**.
+Shared files, including `App.java`, `MainFrame.java`, DAO contracts,
+domain classes, and the database schema, require coordination before
+merging changes.
 
-### 2. Add MySQL Connector/J
+## Use Cases
 
-This project does not bundle the Connector/J binary. Download MySQL Connector/J 8.x, then copy the JAR into this project's `lib` folder and name it:
+### UC-01 — Manage Chapters
 
-`lib/mysql-connector-j-8.4.0.jar`
+- Create a chapter with a system-generated identifier.
+- List and view existing chapters.
+- Rename a chapter.
+- Delete a chapter after confirmation.
+- Validate required titles, title length, and permitted script.
+- Require at least one letter in a chapter title.
+- Publish chapter-created, chapter-updated, and chapter-deleted events.
 
-In Eclipse, right-click the project → **Refresh**. If Eclipse does not pick it up, use **Build Path → Configure Build Path → Libraries → Add JARs**, select the JAR under the project `lib` folder, and apply. The project's `.classpath` uses this relative JAR location so teammates can use the same project layout. Do not commit a machine-specific absolute JAR path.
+Chapter titles are limited to 255 Unicode code points. Script validation
+checks permitted characters; it does not identify the natural language
+of the text.
 
-### 3. Create the database in XAMPP
+### UC-02 — Configure Chapter Structure
 
-1. Open XAMPP Control Panel and start **MySQL** (Apache is only needed if you are opening phpMyAdmin through XAMPP).
-2. Open phpMyAdmin, select **Import**, and import `database/schema.sql`.
-3. This project schema is named **`persian_learning_app_team`**. It is separate from `persian_learning_app` and `persian_learning_app_final`; the SQL does not delete those databases.
-4. Default local connection settings are `localhost:3306`, username `root`, and an empty password. If your local settings differ, set `PERSIAN_DB_URL`, `PERSIAN_DB_USER`, and `PERSIAN_DB_PASSWORD` environment variables. Never put a real password in Git.
+- Select components for a chapter.
+- Define their display order.
+- Maintain and save the chapter's structure.
 
-### 4. Add JUnit 5 and run tests
+The component catalogue includes:
 
-1. Right-click the project → **Build Path → Add Libraries → JUnit → JUnit 5 → Finish**. The project classpath is set to Eclipse's JUnit 5 container.
-2. In Package Explorer, right-click a test class or `src/test/java` → **Run As → JUnit Test**.
-3. The included business tests are empty placeholders until members add assertions; stub-based business tests should not require a running database. Add separate integration checks only when XAMPP is running and the team has agreed on test data cleanup.
+| Component |
+|---|
+| Learning objectives |
+| Persian dialogue |
+| Persian reading passage |
+| Urdu translation or explanation |
+| Grammar or language note |
+| Examples |
+| Exercises |
+| Glossary |
 
-### 5. Run the app
+`EXERCISES` is a component type. It does not represent a separate
+implemented exam or automatic grading system.
 
-Right-click `src/main/java/edu/persianlearningapp/App.java` → **Run As → Java Application**. The current Swing screens are UI skeletons; implement the actions through the assigned BO and DAO before treating them as functional.
+### UC-03 — Manage Instructional Content
 
-## GitHub team workflow
+- Load a chapter's configured components.
+- Select a component for content entry.
+- Enter and maintain Persian and Urdu text.
+- Save, retrieve, and remove component content.
 
-### First push: publish the shared baseline to `main`
+A configured component can have one associated content record.
 
-Create an empty GitHub repository and add Zohaib, Faseeh, and Rabia as collaborators. Extract/import the folder, open Git Bash in the project root (the folder containing `.project` and `README.md`), then run:
+### UC-04 — Manage Chapter Glossary
+
+- List glossary entries for a chapter.
+- Add Persian words and their Urdu meanings.
+- Edit existing entries.
+- Delete entries after confirmation.
+
+Learner study and exam interfaces are outside the current
+implementation scope. A `LearningMode` contract exists for future
+glossary visibility rules.
+
+## Architecture
+
+The application follows a three-layer structure.
+
+| Layer | Responsibility | Package |
+|---|---|---|
+| Presentation | Swing screens, user input, and displayed feedback | `presentation` |
+| Business | Validation and use-case rules | `business` |
+| Data access | DAO contracts, SQL operations, and persistence | `dao`, `dao.mysql` |
+
+Presentation classes call business objects. Business objects access
+persistence through `IDALFacade`. The concrete `DALFacade` delegates
+operations to the relevant DAO.
+
+SQL belongs in the data-access layer.
+
+### Design Patterns
+
+| Pattern | Application |
+|---|---|
+| DAO | Separates persistence operations from business rules |
+| Business Object | Organises validation and operations for each use case |
+| Facade | Provides a unified data-access contract through `IDALFacade` |
+| Abstract Factory / Factory | Creates DAO implementations and the DAL facade |
+| Observer | Supports chapter-event notifications and chapter-list refresh |
+
+Dependencies are passed into business objects through constructors.
+
+The current chapter flow uses `LearningEventSource` and the project's
+custom `Observable` and `Observer` types.
+
+## Project Structure
+
+| Location | Contents |
+|---|---|
+| `src/main/java/edu/persianlearningapp/App.java` | Application entry point |
+| `src/main/java/edu/persianlearningapp/domain/` | Domain objects and enums |
+| `src/main/java/edu/persianlearningapp/presentation/` | Swing windows and panels |
+| `src/main/java/edu/persianlearningapp/business/` | Business objects and validation |
+| `src/main/java/edu/persianlearningapp/dao/` | DAO and factory contracts |
+| `src/main/java/edu/persianlearningapp/dao/mysql/` | JDBC implementations and connection setup |
+| `src/main/java/edu/persianlearningapp/observer/` | Event notification infrastructure |
+| `src/test/java/` | Test sources and shared test support |
+| `database/schema.sql` | Database creation script |
+| `design/` | Design documentation |
+| `lib/` | Local dependency JARs |
+
+## Technology
+
+| Technology | Purpose |
+|---|---|
+| Java 8 / JDK 1.8 | Application language and runtime target |
+| Swing | Desktop interface |
+| JDBC | Database connectivity |
+| XAMPP database service | Local database server |
+| MySQL Connector/J 8.4.0 | JDBC driver used by the project |
+| Eclipse IDE | Development and execution |
+| Git and GitHub | Version control and collaboration |
+| JUnit 5 | Unit-testing support for the next iteration |
+
+The project does not use Maven.
+
+XAMPP distributions commonly provide MariaDB under the control panel's
+“MySQL” service label. Use the team's agreed server and JDBC-driver
+configuration.
+
+## Local Setup
+
+### 1. Clone the repository
 
 ```bash
-git init
-git branch -M main
-git add .
+git clone https://github.com/laiba644/PersianLearningApp.git
+cd PersianLearningApp
+```
+
+For a particular feature branch, fetch the latest remote references
+and check out the relevant branch before running the application.
+
+### 2. Import into Eclipse
+
+1. Select **File → Import → General → Existing Projects into Workspace**.
+2. Choose the cloned project folder containing `.project`.
+3. Leave **Copy projects into workspace** unchecked.
+4. Finish the import.
+
+Keeping the project in the cloned folder ensures Eclipse and Git Bash
+operate on the same files.
+
+### 3. Configure Java and encoding
+
+- Add a **JDK 8** installation under
+  **Window → Preferences → Java → Installed JREs**.
+- Set the project's Java compiler compliance level to **1.8**.
+- Select Java 8 for the application's run configuration.
+- Set **Project → Properties → Resource → Text file encoding** to **UTF-8**.
+
+Eclipse itself may run on a newer Java version; the project's compiler
+and application runtime must still match the Java 8 target.
+
+### 4. Add the JDBC driver
+
+Place the actual MySQL Connector/J 8.4.0 JAR at:
+
+```text
+lib/mysql-connector-j-8.4.0.jar
+```
+
+Do not rename a different driver version to make it appear to be 8.4.0.
+
+Refresh the project. If the dependency remains unresolved, use:
+
+**Project → Properties → Java Build Path → Libraries → Add JARs**
+
+Select the JAR from the project's `lib` folder. Avoid committing
+machine-specific absolute library paths.
+
+### 5. Create the database
+
+1. Open the XAMPP Control Panel.
+2. Start the database service.
+3. Start Apache if using XAMPP's phpMyAdmin interface.
+4. Open phpMyAdmin.
+5. Import `database/schema.sql`.
+
+The supplied schema uses:
+
+```text
+persian_learning_app_team
+```
+
+The database name in the JDBC URL must match the database actually
+created on your machine. If you use a different local database name,
+configure the connection accordingly.
+
+### 6. Configure the connection
+
+The project supports these environment variables:
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `PERSIAN_DB_URL` | JDBC connection URL | Local `persian_learning_app_team` database |
+| `PERSIAN_DB_USER` | Database username | `root` |
+| `PERSIAN_DB_PASSWORD` | Database password | Empty string |
+
+In Eclipse, local values can be supplied through:
+
+**Run → Run Configurations → Java Application → Environment**
+
+Do not commit database passwords or private connection settings.
+
+### 7. Resolve the JUnit container if required
+
+The project includes a test source folder. If Eclipse reports a missing
+JUnit container, add it using:
+
+**Build Path → Add Libraries → JUnit → JUnit 5**
+
+Formal test development and CFG coverage analysis are planned for the
+next iteration. Existing test files do not establish completed coverage.
+
+### 8. Run the application
+
+Open:
+
+```text
+src/main/java/edu/persianlearningapp/App.java
+```
+
+Right-click → **Run As → Java Application**.
+
+Keep the database service running while using database-backed features.
+
+## Database Design
+
+The schema uses `utf8mb4` to store Persian and Urdu text.
+
+| Table | Purpose |
+|---|---|
+| `chapters` | Chapter identifiers, titles, and timestamps |
+| `chapter_components` | Component types and display order within a chapter |
+| `component_contents` | Persian and Urdu content for a configured component |
+| `glossary_entries` | Persian words and Urdu meanings belonging to a chapter |
+
+Foreign keys provide cascading deletion:
+
+- Deleting a chapter removes its components and glossary entries.
+- Deleting a component removes its associated content.
+
+Chapter identifiers are stable database keys. Deleting a chapter does
+not renumber the remaining chapters.
+
+## Team Workflow
+
+### Feature branches
+
+| Member | Branch |
+|---|---|
+| Laiba | `feature/laiba-uc1-chapters` |
+| Zohaib | `feature/zohaib-uc2-components` |
+| Faseeh | `feature/faseeh-uc3-content` |
+| Rabia | `feature/rabia-uc4-glossary` |
+
+Branch names are case-sensitive. Use `git branch -r` to confirm the
+exact remote branch name before checking it out.
+
+### Working on an existing branch
+
+For example, after Laiba's local tracking branch has been created:
+
+```bash
 git status
-git commit -m "Add shared Java project baseline"
-git remote add origin https://github.com/laiba644/PersianLearningApp.git
-git push -u origin main
+git switch feature/laiba-uc1-chapters
+git pull --ff-only origin feature/laiba-uc1-chapters
 ```
 
-Before `git add`, confirm `.env`, passwords, `.metadata`, `bin`, and `*.class` are not being staged. The `.gitignore` excludes the usual local files. If Git says `remote origin already exists`, use `git remote -v` to inspect it and `git remote set-url origin https://github.com/laiba644/PersianLearningApp.git` only if it points to the wrong repository.
+Commit or safely stash pending work before switching branches.
 
-### Each member's work after baseline is pushed
+### Making a focused change
 
-Do not work directly on `main`. Each member creates their own branch from the latest `main`:
+1. Implement one coherent improvement or fix.
+2. Build and manually check the affected flow.
+3. Inspect the diff.
+4. Stage only the relevant files.
+5. Commit with a message describing the change.
+6. Push to the member's feature branch.
+
+Example:
 
 ```bash
-git switch main
-git pull origin main
-git switch -c feature/laiba-uc1-chapters
+git diff
+git add src/main/java/edu/persianlearningapp/business/ChapterBO.java
+git diff --cached
+git commit -m "Require at least one letter in chapter titles"
+git push origin feature/laiba-uc1-chapters
 ```
 
-Use the matching branch names: `feature/zohaib-uc2-structure`, `feature/faseeh-uc3-content`, and `feature/rabia-uc4-glossary`. Make small commits, then publish the branch and open a Pull Request in GitHub:
+### Review and integration
 
-```bash
-git add src
-git status
-git commit -m "Implement UC-01 chapter management"
-git push -u origin feature/laiba-uc1-chapters
-```
+- Open a pull request into `main`.
+- Have another member review the changes.
+- Check shared startup and navigation files carefully.
+- Preserve all required screens when resolving conflicts.
+- Use merge commits when preserving individual commit history.
+- Verify the integrated application before treating it as complete.
 
-A teammate reviews the PR, checks the change and tests, then merges it into `main`. Replace the branch and commit text with your own use case. After a PR is merged, everyone updates their local `main` before starting or continuing work:
+Do not force-push to shared branches or commit local build output,
+workspace metadata, or credentials.
 
-```bash
-git switch main
-git pull origin main
-```
+## Verification and Next Iteration
 
-Keep database passwords and local XAMPP settings out of commits. Never force-push to `main`.
+During the current iteration, changes are checked by building the
+application and manually exercising the affected user flows.
 
-## First implementation tasks
+The next iteration will develop formal unit tests using control-flow
+graphs and test-path mappings, including:
 
-1. The group confirms the open requirements above and agrees on the schema.
-2. Each member reads their BO, DAO interface, DAO implementation, Swing panel, and corresponding test.
-3. Implement the tests and business rules, then the DAO SQL methods, then connect the screen actions.
-4. Run tests and manually verify each flow with XAMPP before opening the Pull Request.
+- Node coverage
+- Edge coverage
+- Branch coverage
+- Edge-pair coverage
+- Valid, invalid, and boundary inputs
+
+Business-layer unit tests will use test doubles rather than a live
+database. Database persistence and cascading deletion require separate
+integration checks.
+
+No complete coverage percentage is claimed at this stage.
+
+## Troubleshooting
+
+| Problem | Check |
+|---|---|
+| Missing JDBC library | Confirm the JAR exists in `lib` and is on the build path |
+| Unsupported class version | Align compiler and application runtime to Java 8, then clean and rebuild |
+| A tab is missing | Check the current branch and its `MainFrame` wiring |
+| Changes do not appear in Eclipse | Refresh with F5 and confirm the project location matches the Git repository |
+| Undefined constructor after switching branches | Refresh and rebuild; check that `App` and `MainFrame` signatures match |
+| Database connection fails | Check the running service, port, database name, credentials, and JDBC URL |
+| Persian or Urdu text is corrupted | Check UTF-8 source encoding, database charset, and connection settings |
+
+## Learning-Material Reference
+
+[Farsi Ki Pehli Kitab — Professor Khan Sahab Qazi Fazle Haq](https://archive.org/details/FarsiKiPehliKitabByProfessorKhanSahabQaziFazleHaq/page/n15/mode/2up)
+
+This book is the reference for preparing learning material.
+A fresh schema import does not automatically populate the application
+with the book's chapters or text.
+
+---
+
+Developed collaboratively by **Laiba, Zohaib, Faseeh, and Rabia**
+for the Software Construction & Development course.

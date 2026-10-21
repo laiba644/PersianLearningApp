@@ -9,4 +9,5 @@ public interface ChapterDAO {
     Chapter findById(int chapterId);
     boolean updateTitle(int chapterId, String title);
     boolean deleteById(int chapterId);
+    boolean existsByTitleExceptId(String title, int excludedChapterId);
 }
