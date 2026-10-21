@@ -117,6 +117,8 @@ public class GlossaryManagementPanel extends JPanel {
     /** Font used for all Persian and Urdu text (NFR-US-04). */
     private final Font rtlFont;
     private JButton addBtn;
+    private JButton editBtn;     
+    private JButton deleteBtn;   
     public GlossaryManagementPanel(GlossaryBO glossaryBO) {
         this.glossaryBO = glossaryBO;
         this.rtlFont    = resolveRtlFont();
@@ -212,9 +214,11 @@ public class GlossaryManagementPanel extends JPanel {
         // Row 2: Add, Edit, Delete buttons (right-aligned)
         JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         addBtn = buildAddButton();
-        buttonRow.add(addBtn);
-        buttonRow.add(buildEditButton());
-        buttonRow.add(buildDeleteButton());
+        buttonRow.add(addBtn);      
+        editBtn = buildEditButton();
+        deleteBtn = buildDeleteButton();
+        buttonRow.add(editBtn);
+        buttonRow.add(deleteBtn);
 
         c.gridx = 0; c.gridy = 2; c.gridwidth = 2; c.weightx = 1;
         south.add(buttonRow, c);
@@ -241,6 +245,7 @@ public class GlossaryManagementPanel extends JPanel {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 prefillFieldsFromSelection();
+                updateButtons();
             }
         });
         // Center the Persian and Urdu columns.
@@ -445,6 +450,7 @@ public class GlossaryManagementPanel extends JPanel {
         } catch (DataAccessException ex) {
             showError(MSG_DB_ERROR);
         }
+        updateButtons();
     }
     private void prefillFieldsFromSelection() {
         int row = entryTable.getSelectedRow();
@@ -485,10 +491,13 @@ public class GlossaryManagementPanel extends JPanel {
 
     /** Enable each button only when its action makes sense. */
     private void updateButtons() {
-        if (addBtn == null) {
+        if (addBtn == null || editBtn == null || deleteBtn == null) {
             return;   // panel is still being built
         }
+        boolean hasRow = entryTable.getSelectedRow() >= 0;
         addBtn.setEnabled(hasText());
+        editBtn.setEnabled(hasRow && hasText());
+        deleteBtn.setEnabled(hasRow);
     }
     private void showError(String message) {
         // Set dialog text direction to right-to-left so Urdu reads naturally.
