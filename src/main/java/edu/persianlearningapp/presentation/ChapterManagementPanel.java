@@ -6,13 +6,14 @@ import edu.persianlearningapp.domain.Chapter;
 import edu.persianlearningapp.observer.LearningEventSource;
 import edu.persianlearningapp.observer.Observable;
 import edu.persianlearningapp.observer.Observer;
-
+import java.awt.Color;
+import java.awt.Insets;
+import javax.swing.BorderFactory;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.FlowLayout;
 import java.util.List;
-
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -22,7 +23,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
-
 public class ChapterManagementPanel extends JPanel implements Observer {
 
     private final ChapterBO chapterBO;
@@ -33,11 +33,24 @@ public class ChapterManagementPanel extends JPanel implements Observer {
     private final JButton deleteButton = new JButton("حذف کریں");
     public ChapterManagementPanel( ChapterBO chapterBO, LearningEventSource eventSource) {
         this.chapterBO = chapterBO;
-
-        setLayout(new BorderLayout(10, 10));
-
-        JLabel heading = new JLabel("ابواب کا انتظام", JLabel.CENTER);
-        add(heading, BorderLayout.NORTH);
+        setLayout(new BorderLayout(16, 16));
+        setBackground(new Color(245, 247, 250));
+        setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
+        JPanel header = new JPanel(new BorderLayout(0, 8));
+        header.setOpaque(false);
+        JLabel heading = new JLabel("ابواب کا انتظام", JLabel.RIGHT);
+        heading.setForeground(new Color(24, 83, 86));
+        JLabel instruction = new JLabel(
+                "نیا باب شامل کریں یا فہرست سے ایک باب منتخب کریں۔",
+                JLabel.RIGHT);
+        instruction.setForeground(new Color(85, 96, 110));
+        header.add(heading, BorderLayout.NORTH);
+        header.add(instruction, BorderLayout.SOUTH);
+        add(header, BorderLayout.NORTH);
+        chapterList.setBackground(Color.WHITE);
+        chapterList.setForeground(new Color(35, 45, 55));
+        chapterList.setSelectionBackground(new Color(218, 239, 236));
+        chapterList.setSelectionForeground(new Color(20, 75, 70));
 
         chapterList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
@@ -49,13 +62,24 @@ public class ChapterManagementPanel extends JPanel implements Observer {
 
                 Chapter chapter = (Chapter) value;
                 label.setText(chapter.getId() + "  |  " + chapter.getTitle());
+                label.setHorizontalAlignment(JLabel.RIGHT);
+                label.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(
+                                0, 0, 1, 0, new Color(232, 237, 241)),
+                        BorderFactory.createEmptyBorder(12, 16, 12, 16)));
                 label.setComponentOrientation(
                         ComponentOrientation.RIGHT_TO_LEFT);
                 return label;
             }
         });
 
-        add(new JScrollPane(chapterList), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(chapterList);
+        scrollPane.setBorder(BorderFactory.createLineBorder(
+                new Color(218, 226, 232)));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+
+        add(scrollPane, BorderLayout.CENTER);
+        
         add(createButtons(), BorderLayout.SOUTH);
 
         applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
@@ -81,7 +105,10 @@ public class ChapterManagementPanel extends JPanel implements Observer {
         deleteButton.setEnabled(hasSelection);
     }
     private JPanel createButtons() {
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    	
+    	    JPanel buttons = new JPanel(
+    	            new FlowLayout(FlowLayout.CENTER, 12, 8));
+    	    buttons.setOpaque(false);
 
         JButton createButton = new JButton("نیا باب");
         JButton refreshButton = new JButton("فہرست تازہ کریں");
@@ -97,7 +124,25 @@ public class ChapterManagementPanel extends JPanel implements Observer {
         buttons.add(renameButton);
         buttons.add(deleteButton);
         buttons.add(refreshButton);
+        for (Component component : buttons.getComponents()) {
+            JButton button = (JButton) component;
+            button.setMargin(new Insets(8, 14, 8, 14));
+            button.setOpaque(true);
+            button.setBackground(Color.WHITE);
+            button.setForeground(new Color(35, 45, 55));
+        }
 
+     // Primary action dark teal
+        createButton.setBackground(new Color(24, 103, 98));
+        createButton.setForeground(Color.WHITE);
+
+        // Refresh light blue
+        refreshButton.setBackground(new Color(225, 237, 250));
+        refreshButton.setForeground(new Color(30, 70, 115));
+
+        // Delete light amber
+        deleteButton.setBackground(new Color(255, 237, 213));
+        deleteButton.setForeground(new Color(135, 65, 15));
         return buttons;
     }
 
