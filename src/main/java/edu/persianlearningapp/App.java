@@ -20,7 +20,7 @@ public class App {
                
 
                 MainFrame frame =
-                        new MainFrame(chapterBO, structureBO, events);
+                        new MainFrame(chapterBO, structurebo, contentBO, events);
                 frame.setVisible(true);
             }
         });

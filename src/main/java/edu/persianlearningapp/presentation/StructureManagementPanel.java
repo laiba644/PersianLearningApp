@@ -354,7 +354,7 @@ public class StructureManagementPanel extends JPanel implements Observer {
         gbc.weightx = 0.30;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.LINE_START;
-        panel.add(label, gbc);
+        panel.add(input, gbc);
 
         // Left column: dropdown or input field (takes remaining width).
         gbc.gridx = 1;
