@@ -17,10 +17,7 @@ public class App {
         ContentBO contentBO = new ContentBO(dal);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-               
-
-                MainFrame frame =
-                        new MainFrame(chapterBO, structureBO, events);
+            	MainFrame frame = new MainFrame(chapterBO, structurebo, contentBO, events);
                 frame.setVisible(true);
             }
         });
