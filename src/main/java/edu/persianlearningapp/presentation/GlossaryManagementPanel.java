@@ -16,6 +16,8 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import edu.persianlearningapp.dao.DataAccessException;
 import edu.persianlearningapp.domain.Chapter;
+import javax.swing.table.DefaultTableCellRenderer;
+
 public class GlossaryManagementPanel extends JPanel {
 
     private static final int COL_ENTRY_ID     = 0;  // hidden column
@@ -159,7 +161,7 @@ public class GlossaryManagementPanel extends JPanel {
         refreshBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                refreshTable();
+            	loadChapters();
             }
         });
 
@@ -236,7 +238,11 @@ public class GlossaryManagementPanel extends JPanel {
                 prefillFieldsFromSelection();
             }
         });
-
+        // Center the Persian and Urdu columns.
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getColumnModel().getColumn(COL_PERSIAN_WORD).setCellRenderer(center);
+        table.getColumnModel().getColumn(COL_URDU_MEANING).setCellRenderer(center);
         return table;
     }
 
