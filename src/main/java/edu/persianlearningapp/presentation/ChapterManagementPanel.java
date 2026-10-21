@@ -249,7 +249,12 @@ public class ChapterManagementPanel extends JPanel implements Observer {
                 chapterModel.addElement(chapter);
             }
         } catch (RuntimeException e) {
-            showError("ابواب کی فہرست نہیں کھل سکی۔ ڈیٹا بیس چیک کریں۔");
+            showError(
+                    "ابواب لوڈ نہیں ہو سکے۔\n"
+                    + "XAMPP میں MySQL اور ڈیٹا بیس کی ترتیبات چیک کریں۔\n"
+                    + "پھر ایپ دوبارہ چلائیں۔"
+            );
+            System.exit(0);
         }
     }
 
