@@ -9,6 +9,7 @@ import java.awt.ComponentOrientation;
 import edu.persianlearningapp.business.ChapterBO;
 import edu.persianlearningapp.business.StructureBO;
 import edu.persianlearningapp.observer.LearningEventSource;
+import edu.persianlearningapp.business.ContentBO;
 
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
@@ -17,7 +18,7 @@ public class MainFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
-    public MainFrame(ChapterBO chapterBO,StructureBO structurebo, LearningEventSource events) {
+    public MainFrame(ChapterBO chapterBO, StructureBO structurebo,ContentBO contentBO, LearningEventSource events) {
         super("فارسی سیکھنے کی ایپ");
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -38,6 +39,12 @@ public class MainFrame extends JFrame {
                 new StructureManagementPanel(structurebo, chapterBO, events);
 
         tabs.addTab("اجزاء کا انتظام", structurePanel);
+        
+     //UC3
+        ContentManagementPanel contentPanel =
+                new ContentManagementPanel(contentBO, chapterBO);
+
+        tabs.addTab("تعلیمی مواد کا انتظام", contentPanel);
 
         setContentPane(tabs);
 

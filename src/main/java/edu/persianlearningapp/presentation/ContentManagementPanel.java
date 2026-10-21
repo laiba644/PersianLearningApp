@@ -1,11 +1,257 @@
 package edu.persianlearningapp.presentation;
 
 import edu.persianlearningapp.business.ContentBO;
-import javax.swing.JPanel;
+import edu.persianlearningapp.business.ChapterBO;
+import edu.persianlearningapp.domain.ChapterComponent;
+import edu.persianlearningapp.domain.ComponentContent;
 
-/** UC-03 presentation shell; add Unicode text fields and save controls. */
+import java.awt.BorderLayout;
+import java.awt.ComponentOrientation;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;//components ko top bottom left krt hai 
+import javax.swing.JButton;
+import javax.swing.JComboBox;//chp or com select krnay ka dropdown
+import javax.swing.JLabel;
+import javax.swing.JPanel;//gui container
+import javax.swing.JScrollPane;//text ziada ho to scroll allow krta hai
+import javax.swing.JTextArea;
+import edu.persianlearningapp.domain.Chapter;
+import java.util.List;
+import java.util.ArrayList;
+import javax.swing.JOptionPane;
+
+
 public class ContentManagementPanel extends JPanel {
     private final ContentBO contentBO;
-    public ContentManagementPanel(ContentBO contentBO) { this.contentBO = contentBO; }
-    public ContentBO getContentBO() { return contentBO; }
+    private final ChapterBO chapterBO;
+    private final JComboBox<String> chapterComboBox = new JComboBox<>();
+    private final JComboBox<String> componentComboBox = new JComboBox<>();
+    private final JTextArea persianArea = new JTextArea(5, 30);
+    private final JTextArea urduArea = new JTextArea(5, 30);
+    private final JButton saveButton = new JButton("Save Content");
+    private final JButton deleteButton = new JButton("Delete Content");
+    private final JButton refreshButton = new JButton("Refresh");
+    
+    private final List<Chapter> chapters = new ArrayList<>();
+    private final List<ChapterComponent> components = new ArrayList<>();
+    private boolean loadingChapters = false;
+    
+    public ContentManagementPanel(ContentBO contentBO, ChapterBO chapterBO) {
+        this.contentBO = contentBO;
+        this.chapterBO = chapterBO;
+        setLayout(new BorderLayout(10, 10));
+
+        //chapter component selection
+        JPanel selectionPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+
+        selectionPanel.add(new JLabel("Select Chapter:"));
+        selectionPanel.add(chapterComboBox);
+        selectionPanel.add(new JLabel("Select Component:"));
+        selectionPanel.add(componentComboBox);
+        add(selectionPanel, BorderLayout.NORTH);
+        //persian ya urdu kay content area
+        JPanel textPanel = new JPanel(new GridLayout(2, 1, 10, 10));
+
+        persianArea.setLineWrap(true);
+        persianArea.setWrapStyleWord(true);
+        persianArea.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        urduArea.setLineWrap(true);
+        urduArea.setWrapStyleWord(true);
+        urduArea.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+
+        JPanel persianPanel = new JPanel(new BorderLayout());
+        persianPanel.add(new JLabel("Persian Content:"), BorderLayout.NORTH);
+        persianPanel.add(new JScrollPane(persianArea), BorderLayout.CENTER);
+        
+        JPanel urduPanel = new JPanel(new BorderLayout());
+        urduPanel.add(new JLabel("Urdu Content:"), BorderLayout.NORTH);
+        urduPanel.add(new JScrollPane(urduArea), BorderLayout.CENTER);
+        textPanel.add(persianPanel);
+        textPanel.add(urduPanel);
+        add(textPanel, BorderLayout.CENTER);
+
+        //buttonss
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(saveButton);
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(refreshButton);
+        add(buttonPanel, BorderLayout.SOUTH);
+        refreshButton.addActionListener(e -> loadChapters());
+        saveButton.addActionListener(e -> saveContent());
+        deleteButton.addActionListener(e -> deleteContent());
+        chapterComboBox.addActionListener(e -> {
+            if (!loadingChapters) {
+                loadComponents();
+            }
+        });
+        componentComboBox.addActionListener(e -> loadContent());
+        loadChapters();
+    }
+
+	private void loadChapters() {
+		loadingChapters = true;
+	    chapterComboBox.removeAllItems();
+	    componentComboBox.removeAllItems();
+	    chapters.clear();
+	    persianArea.setText("");
+	    urduArea.setText("");
+	    try {
+	        List<Chapter> loadedChapters = chapterBO.listChapters();
+	
+	        for (Chapter chapter : loadedChapters) {
+	
+	            chapters.add(chapter);
+	
+	            chapterComboBox.addItem(
+	                chapter.getId() + " - " + chapter.getTitle()
+	            );
+	        }
+	
+	    } catch (RuntimeException e) {
+	        JOptionPane.showMessageDialog(
+	            this,
+	            "Could not load chapters. Check database connection.",
+	            "Error",
+	            JOptionPane.ERROR_MESSAGE
+	        );
+	    }
+	    loadingChapters = false;
+	    loadComponents();
+	}
+
+	private void loadComponents() {	
+	    componentComboBox.removeAllItems();
+	    components.clear();
+	    persianArea.setText("");
+	    urduArea.setText("");
+	    int index = chapterComboBox.getSelectedIndex();
+	    if (index < 0 || index >= chapters.size()) {
+	        return;
+	    }
+	    int chapterId = chapters.get(index).getId();
+	    try {
+	        List<ChapterComponent> loadedComponents =
+	                contentBO.listConfiguredComponents(chapterId);
+	        for (ChapterComponent component : loadedComponents) {
+	            components.add(component);
+	            componentComboBox.addItem(
+	                component.getDisplayOrder() + " - "
+	                + component.getComponentType()
+	            );
+	        }
+	    } catch (RuntimeException e) {
+	        JOptionPane.showMessageDialog(
+	            this,
+	            "Could not load components: " + e.getMessage(),
+	            "Error",
+	            JOptionPane.ERROR_MESSAGE
+	        );
+	    }
+	}
+
+	private void loadContent() {
+	
+	    persianArea.setText("");
+	    urduArea.setText("");
+	    int chapterIndex = chapterComboBox.getSelectedIndex();
+	    int componentIndex = componentComboBox.getSelectedIndex();
+	    if (chapterIndex < 0 || componentIndex < 0) {
+	        return;
+	    }
+	    if (chapterIndex >= chapters.size() ||
+	        componentIndex >= components.size()) {
+	        return;
+	    }
+	    int chapterId = chapters.get(chapterIndex).getId();
+	    int componentId = components.get(componentIndex).getId();
+	    try {
+	        ComponentContent content =
+	                contentBO.getContent(chapterId, componentId);
+	
+	        if (content != null) {
+	
+	            persianArea.setText(content.getPersianContent());
+	            urduArea.setText(content.getUrduContent());
+	        }	
+	    } catch (RuntimeException e) {
+	
+	        JOptionPane.showMessageDialog(
+	            this,
+	            "Could not load content: " + e.getMessage(),
+	            "Error",
+	            JOptionPane.ERROR_MESSAGE
+	        );
+	    }
+	}
+
+
+	private void saveContent() {
+	
+	    int chapterIndex = chapterComboBox.getSelectedIndex();
+	    int componentIndex = componentComboBox.getSelectedIndex();
+	
+	    if (chapterIndex < 0 || componentIndex < 0) {
+	        JOptionPane.showMessageDialog(this, "Please select a chapter and component.");
+	        return;
+	    }
+	
+	    int chapterId = chapters.get(chapterIndex).getId();
+	    int componentId = components.get(componentIndex).getId();
+	
+	    String persian = persianArea.getText();
+	    String urdu = urduArea.getText();
+	
+	    try {
+	        contentBO.saveContent(chapterId, componentId, persian, urdu);
+	
+	        JOptionPane.showMessageDialog(this, "Content saved successfully.");
+	
+	        loadContent();
+	
+	    } catch (RuntimeException e) {
+	        JOptionPane.showMessageDialog(
+	            this,
+	            "Could not save content: " + e.getMessage(),
+	            "Error",
+	            JOptionPane.ERROR_MESSAGE
+	        );
+	    }
+	}
+
+	private void deleteContent() {	
+	    int chapterIndex = chapterComboBox.getSelectedIndex();
+	    int componentIndex = componentComboBox.getSelectedIndex();
+	    if (chapterIndex < 0 || componentIndex < 0) {
+	        JOptionPane.showMessageDialog(this, "Please select a chapter and component.");
+	        return;
+	    }
+	    int chapterId = chapters.get(chapterIndex).getId();
+	    int componentId = components.get(componentIndex).getId();
+	    int choice = JOptionPane.showConfirmDialog(
+	        this,
+	        "Are you sure you want to delete this content?",
+	        "Confirm Delete",
+	        JOptionPane.YES_NO_OPTION
+	    );
+	    if (choice != JOptionPane.YES_OPTION) {
+	        return;
+	    }
+	    try {
+	        contentBO.removeContent(chapterId, componentId);
+	        JOptionPane.showMessageDialog(this, "Content deleted successfully.");
+	        loadContent();
+	    } catch (RuntimeException e) {
+	        JOptionPane.showMessageDialog(
+	            this,
+	            "Could not delete content: " + e.getMessage(),
+	            "Error",
+	            JOptionPane.ERROR_MESSAGE
+	        );
+	    }
+	}
+
+
+    public ContentBO getContentBO() {
+        return contentBO;
+    }
 }
