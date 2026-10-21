@@ -15,7 +15,7 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import edu.persianlearningapp.dao.DataAccessException;
-
+import edu.persianlearningapp.domain.Chapter;
 public class GlossaryManagementPanel extends JPanel {
 
     private static final int COL_ENTRY_ID     = 0;  // hidden column
@@ -93,7 +93,11 @@ public class GlossaryManagementPanel extends JPanel {
     private final GlossaryBO glossaryBO;
 
     /** Spinner that holds the current chapter id selected by the admin. */
-    private final JSpinner chapterSpinner;
+    /** Drop-down of existing chapters only (no typing allowed). */
+    private final JComboBox<Chapter> chapterBox;
+
+    /** True while the chapter list is being reloaded, to avoid extra refreshes. */
+    private boolean loadingChapters = false;
 
     /** Table model that backs the glossary JTable. */
     private final DefaultTableModel tableModel;
@@ -113,6 +117,7 @@ public class GlossaryManagementPanel extends JPanel {
     public GlossaryManagementPanel(GlossaryBO glossaryBO) {
         this.glossaryBO = glossaryBO;
         this.rtlFont    = resolveRtlFont();
+        
 
         // Table model: 3 columns, no cells editable directly.
         // Column 0 (entry_id) is kept hidden so we have the id when editing/deleting.
@@ -127,14 +132,14 @@ public class GlossaryManagementPanel extends JPanel {
         entryTable   = buildTable();
         persianField = buildRtlTextField(20);
         urduField    = buildRtlTextField(30);
-        chapterSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
-        chapterSpinner.setFont(rtlFont);
+        chapterBox = buildChapterBox();
         setLayout(new BorderLayout(6, 6));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         add(buildNorthPanel(),  BorderLayout.NORTH);
         add(new JScrollPane(entryTable), BorderLayout.CENTER);
         add(buildSouthPanel(), BorderLayout.SOUTH);
+        loadChapters();
     }
 
     public GlossaryBO getGlossaryBO() {
@@ -159,7 +164,7 @@ public class GlossaryManagementPanel extends JPanel {
         });
 
         north.add(refreshBtn);
-        north.add(chapterSpinner);
+        north.add(chapterBox);
         north.add(chapLabel);
         JLabel title = new JLabel("لغت کا انتظام", SwingConstants.CENTER);
         title.setFont(rtlFont);
@@ -272,6 +277,60 @@ public class GlossaryManagementPanel extends JPanel {
             }
         });
         return btn;
+    }
+    /** Build the chapter drop-down: choose from the list, no typing. */
+    private JComboBox<Chapter> buildChapterBox() {
+        JComboBox<Chapter> box = new JComboBox<Chapter>();
+        box.setFont(rtlFont);
+        box.setEditable(false);
+        box.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        box.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(
+                        list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Chapter) {
+                    Chapter c = (Chapter) value;
+                    label.setText(c.getId() + " - " + c.getTitle());
+                }
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+                return label;
+            }
+        });
+        // Picking a chapter shows its glossary straight away.
+        box.addActionListener(e -> {
+            if (!loadingChapters) {
+                refreshTable();
+            }
+        });
+        return box;
+    }
+
+    /** Reload the chapter list from the BO, keep the selection, then refresh the table. */
+    private void loadChapters() {
+        int keepId = currentChapterId();
+        loadingChapters = true;
+        try {
+            chapterBox.removeAllItems();
+            for (Chapter c : glossaryBO.listChapters()) {
+                chapterBox.addItem(c);
+            }
+            for (int i = 0; i < chapterBox.getItemCount(); i++) {
+                if (chapterBox.getItemAt(i).getId() == keepId) {
+                    chapterBox.setSelectedIndex(i);
+                    break;
+                }
+            }
+        } catch (BusinessException ex) {
+            showError(ex.getMessage());
+        } catch (DataAccessException ex) {
+            showError(MSG_DB_ERROR);
+        } finally {
+            loadingChapters = false;
+        }
+        refreshTable();
     }
 
     private JTextField buildRtlTextField(int columns) {
@@ -387,7 +446,12 @@ public class GlossaryManagementPanel extends JPanel {
     }
     /** Id of the chapter currently selected by the admin. */
     private int currentChapterId() {
-        return (Integer) chapterSpinner.getValue();
+        Chapter c = (Chapter) chapterBox.getSelectedItem();
+        if (c == null) {
+            return -1;
+        } else {
+            return c.getId();
+        }
     }
     private void clearFields() {
         persianField.setText("");
