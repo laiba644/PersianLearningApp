@@ -24,6 +24,14 @@ public class GlossaryBO {
         return false;
     }
 
+   
+    private void requireNotDuplicate(int chapterId, String word, int ignoreEntryId) {
+        for (GlossaryEntry e : dal.findGlossaryByChapterId(chapterId)) {
+            if (e.getId() != ignoreEntryId && e.getPersianWord().trim().equals(word)) {
+                throw new BusinessException(MSG_DUPLICATE_WORD);
+            }
+        }
+    }
     public GlossaryBO(IDALFacade dal) {
         this.dal = dal;
     }
@@ -72,7 +80,10 @@ public class GlossaryBO {
     static final String MSG_ENTRY_NOT_FOUND =
         "یہ اندراج اس باب "
         + "میں موجود نہیں۔";
-
+    // (This word already exists in this chapter.)
+    static final String MSG_DUPLICATE_WORD =
+        "یہ لفظ اس باب "
+        + "میں پہلے سے موجود ہے۔";
     public int addEntry(int chapterId, String persianWord, String urduMeaning) {
         // Trim once; every check below uses the trimmed values.
         String word    = trim(persianWord);
@@ -84,7 +95,7 @@ public class GlossaryBO {
 
         // The chapter must exist before we can add an entry (FR-GL-06).
         requireChapterExists(chapterId);
-
+        requireNotDuplicate(chapterId, word, 0);
         // Build the entry with id=0; the database will assign the real id.
         GlossaryEntry entry = new GlossaryEntry(0, chapterId, word, meaning);
 
@@ -103,7 +114,7 @@ public class GlossaryBO {
 
         // Confirm the entry belongs to this chapter.
         requireEntryInChapter(chapterId, entryId);
-
+        requireNotDuplicate(chapterId, word, entryId);
         // All checks passed. Build the updated entry and save it.
         GlossaryEntry updated = new GlossaryEntry(entryId, chapterId, word, meaning);
         boolean saved = dal.update(updated);
@@ -128,7 +139,10 @@ public class GlossaryBO {
             throw new BusinessException(MSG_ENTRY_NOT_FOUND);
         }
     }
-
+   
+    public List<Chapter> listChapters() {
+        return dal.findAll();
+    }
 
     public List<GlossaryEntry> listForAdmin(int chapterId) {
         return dal.findGlossaryByChapterId(chapterId);

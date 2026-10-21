@@ -161,7 +161,6 @@ public class GlossaryManagementPanel extends JPanel {
         north.add(refreshBtn);
         north.add(chapterSpinner);
         north.add(chapLabel);
-
         JLabel title = new JLabel("لغت کا انتظام", SwingConstants.CENTER);
         title.setFont(rtlFont);
 
