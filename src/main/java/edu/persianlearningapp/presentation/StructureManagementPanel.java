@@ -196,6 +196,8 @@ public class StructureManagementPanel extends JPanel implements Observer {
                 return "مثالیں";
             case LESSON_TEXT:
             	return "سبق کا متن";
+            case EXERCISES:
+            	return "مشق";
             default:
                 return typename.name();
         }
