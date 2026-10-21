@@ -5,7 +5,7 @@ import edu.persianlearningapp.dao.IDALFacade;
 import edu.persianlearningapp.dao.mysql.MySQLDAOFactory;
 import edu.persianlearningapp.observer.LearningEventSource;
 import edu.persianlearningapp.presentation.MainFrame;
-
+import edu.persianlearningapp.business.GlossaryBO;
 import javax.swing.SwingUtilities;
 
 public class App {
@@ -15,12 +15,10 @@ public class App {
         ChapterBO chapterBO = new ChapterBO(dal, events);
         StructureBO structurebo = new StructureBO(dal);
         ContentBO contentBO = new ContentBO(dal);
+        GlossaryBO glossaryBO = new GlossaryBO(dal);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-               
-
-                MainFrame frame =
-                        new MainFrame(chapterBO, structurebo, contentBO, events);
+                MainFrame frame = new MainFrame(chapterBO, structurebo, contentBO, glossaryBO, events);
                 frame.setVisible(true);
             }
         });

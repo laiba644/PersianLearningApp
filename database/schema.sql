@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS glossary_entries (
   chapter_id INT NOT NULL,
   persian_word VARCHAR(255) NOT NULL,
   urdu_meaning VARCHAR(1000) NOT NULL,
-  PRIMARY KEY (entry_id),
+    PRIMARY KEY (entry_id),
+  UNIQUE KEY uq_glossary_chapter_word (chapter_id, persian_word),
   CONSTRAINT fk_glossary_chapter FOREIGN KEY (chapter_id)
     REFERENCES chapters(chapter_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

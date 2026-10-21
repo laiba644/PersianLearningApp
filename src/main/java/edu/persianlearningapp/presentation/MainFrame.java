@@ -1,4 +1,3 @@
-
 package edu.persianlearningapp.presentation;
 
 import java.awt.Component;
@@ -7,6 +6,7 @@ import java.awt.Font;
 import java.awt.ComponentOrientation;
 
 import edu.persianlearningapp.business.ChapterBO;
+import edu.persianlearningapp.business.GlossaryBO;
 import edu.persianlearningapp.business.StructureBO;
 import edu.persianlearningapp.observer.LearningEventSource;
 import edu.persianlearningapp.business.ContentBO;
@@ -18,7 +18,9 @@ public class MainFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
-    public MainFrame(ChapterBO chapterBO, StructureBO structurebo,ContentBO contentBO, LearningEventSource events) {
+    public MainFrame(ChapterBO chapterBO, StructureBO structurebo,
+            ContentBO contentBO, GlossaryBO glossaryBO,
+            LearningEventSource events)  {
         super("فارسی سیکھنے کی ایپ");
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -33,8 +35,6 @@ public class MainFrame extends JFrame {
         tabs.addTab("ابواب کا انتظام", chapterPanel);
 
         // Chapter components management screen
-//        StructureBO structureBO = new StructureBO();
-
         StructureManagementPanel structurePanel =
                 new StructureManagementPanel(structurebo, chapterBO, events);
 
@@ -45,6 +45,12 @@ public class MainFrame extends JFrame {
         		new ContentManagementPanel(contentBO, chapterBO, events);
 
         tabs.addTab("تعلیمی مواد کا انتظام", contentPanel);
+
+        // Glossary management screen (UC-04)
+        GlossaryManagementPanel glossaryPanel =
+                new GlossaryManagementPanel(glossaryBO);
+
+        tabs.addTab("لغت", glossaryPanel);
 
         setContentPane(tabs);
 
