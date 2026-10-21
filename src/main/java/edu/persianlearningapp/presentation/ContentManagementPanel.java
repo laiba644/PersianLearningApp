@@ -21,7 +21,11 @@ import java.util.ArrayList;
 import javax.swing.JOptionPane;
 
 
-public class ContentManagementPanel extends JPanel {
+import edu.persianlearningapp.observer.LearningEventSource;
+import edu.persianlearningapp.observer.Observable;
+import edu.persianlearningapp.observer.Observer;
+import javax.swing.SwingUtilities;
+public class ContentManagementPanel extends JPanel implements Observer{
     private final ContentBO contentBO;
     private final ChapterBO chapterBO;
     private final JComboBox<String> chapterComboBox = new JComboBox<>();
@@ -36,7 +40,7 @@ public class ContentManagementPanel extends JPanel {
     private final List<ChapterComponent> components = new ArrayList<>();
     private boolean loadingChapters = false;
     
-    public ContentManagementPanel(ContentBO contentBO, ChapterBO chapterBO) {
+    public ContentManagementPanel(ContentBO contentBO, ChapterBO chapterBO,LearningEventSource eventSource) {
         this.contentBO = contentBO;
         this.chapterBO = chapterBO;
         setLayout(new BorderLayout(10, 10));
@@ -87,6 +91,7 @@ public class ContentManagementPanel extends JPanel {
         componentComboBox.addActionListener(e -> loadContent());
         loadChapters();
         applyComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        eventSource.addObserver(this);
     }
 
 	private void loadChapters() {
@@ -277,6 +282,69 @@ public class ContentManagementPanel extends JPanel {
                 return type;
         }
     }
+
+	@Override
+	public void update(Observable subject) {
+	
+	    if (!(subject instanceof LearningEventSource)) {
+	        return;
+	    }
+	
+	    if (SwingUtilities.isEventDispatchThread()) {
+	        refreshChaptersFromEvent();
+	    } else {
+	        SwingUtilities.invokeLater(() -> refreshChaptersFromEvent());
+	    }
+	}
+
+	private void refreshChaptersFromEvent() {
+	
+	    int oldIndex = chapterComboBox.getSelectedIndex();
+	    int oldChapterId = -1;
+	
+	    if (oldIndex >= 0 && oldIndex < chapters.size()) {
+	        oldChapterId = chapters.get(oldIndex).getId();
+	    }
+	
+	    try {
+	        List<Chapter> latestChapters = chapterBO.listChapters();
+	
+	        loadingChapters = true;
+	
+	        chapterComboBox.removeAllItems();
+	        chapters.clear();
+	
+	        int newIndex = -1;
+	
+	        for (Chapter chapter : latestChapters) {
+	
+	            if (chapter.getId() == oldChapterId) {
+	                newIndex = chapters.size();
+	            }
+	
+	            chapters.add(chapter);
+	            chapterComboBox.addItem(
+	                chapter.getId() + " - " + chapter.getTitle()
+	            );
+	        }
+	
+	        chapterComboBox.setSelectedIndex(newIndex);
+	
+	    } catch (RuntimeException e) {
+	        JOptionPane.showMessageDialog(this,
+	            "فصل‌ها بارگذاری نشدند: " + e.getMessage());
+	        return;
+	
+	    } finally {
+	        loadingChapters = false;
+	    }
+	
+	    if (oldChapterId > 0 &&
+	        chapterComboBox.getSelectedIndex() == -1) {
+	        loadComponents();
+	    }
+	}
+
 
 
 }
