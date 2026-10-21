@@ -9,6 +9,7 @@ import edu.persianlearningapp.business.ChapterBO;
 import edu.persianlearningapp.business.GlossaryBO;
 import edu.persianlearningapp.business.StructureBO;
 import edu.persianlearningapp.observer.LearningEventSource;
+import edu.persianlearningapp.business.ContentBO;
 
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
@@ -34,9 +35,15 @@ public class MainFrame extends JFrame {
 
         // Chapter components management screen
         StructureManagementPanel structurePanel =
-                new StructureManagementPanel(structurebo, chapterBO);
+                new StructureManagementPanel(structurebo, chapterBO, events);
 
         tabs.addTab("اجزاء کا انتظام", structurePanel);
+        
+     //UC3
+        ContentManagementPanel contentPanel =
+                new ContentManagementPanel(contentBO, chapterBO);
+
+        tabs.addTab("تعلیمی مواد کا انتظام", contentPanel);
 
         // Glossary management screen (UC-04)
         GlossaryManagementPanel glossaryPanel =
