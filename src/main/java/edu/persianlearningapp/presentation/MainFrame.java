@@ -19,7 +19,8 @@ public class MainFrame extends JFrame {
     private static final long serialVersionUID = 1L;
 
     public MainFrame(ChapterBO chapterBO, StructureBO structurebo,
-                     GlossaryBO glossaryBO, LearningEventSource events) {
+            ContentBO contentBO, GlossaryBO glossaryBO,
+            LearningEventSource events)  {
         super("فارسی سیکھنے کی ایپ");
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

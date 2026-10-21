@@ -122,8 +122,7 @@ public class GlossaryBO {
 
         // Verify the entry exists in this chapter before trying to delete.
         requireEntryInChapter(chapterId, entryId);
-
-        // Delete it. If the DAO says nothing was deleted, the entry is gone.
+     // Isay delete kar do. Agar DAO yeh kahe ke kuch bhi delete nahi hua, toh samjho entry pehle hi khatam ho chuki hai.
         boolean deleted = dal.delete(chapterId, entryId);
         if (!deleted) {
             throw new BusinessException(MSG_ENTRY_NOT_FOUND);
