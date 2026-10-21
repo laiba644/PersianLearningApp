@@ -15,47 +15,13 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import edu.persianlearningapp.dao.DataAccessException;
-/**
- * UC-04 Swing panel: Manage Chapter Glossary.
- *
- * Layout (BorderLayout):
- *   NORTH  - chapter selector and Refresh button
- *   CENTER - scrollable JTable showing entries (Persian word | Urdu meaning)
- *   SOUTH  - text fields for Persian word and Urdu meaning, plus Add/Edit/Delete buttons
- *
- * RTL / font rules (NFR-US-02, NFR-US-03, NFR-US-04):
- *   - All Persian and Urdu text fields use ComponentOrientation.RIGHT_TO_LEFT.
- *   - The table columns for Persian and Urdu are also right-to-left.
- *   - Font resolution tries: "Noto Naskh Arabic" first (best for Persian/Urdu),
- *     then "Arial Unicode MS", then the JVM default. Whichever is found first.
- *
- * Validation / error handling (BR-07):
- *   - On BusinessException the text in the input fields is KEPT and a dialog
- *     shows the Urdu message from the exception. No data is lost.
- *   - On success the input fields are cleared and the table is refreshed.
- *
- * Delete confirmation (BR-04, NFR-US-05):
- *   - A Yes/No dialog appears before deletion.
- *   - The boolean result (YES_OPTION) is passed directly to deleteEntry
- *     as the "confirmed" flag. The BO ignores unconfirmed deletes.
- *
- * This panel only calls GlossaryBO. No SQL, no DAO imports here.
- *
- * Owner: Rabia (UC-04)
- */
+
 public class GlossaryManagementPanel extends JPanel {
 
-    // ------------------------------------------------------------------
-    // Column indexes in the table model -- keep them in one place.
-    // ------------------------------------------------------------------
     private static final int COL_ENTRY_ID     = 0;  // hidden column
     private static final int COL_PERSIAN_WORD = 1;
     private static final int COL_URDU_MEANING = 2;
 
-    // ------------------------------------------------------------------
-    // Column header labels (Urdu labels so the UI is understandable to
-    // Urdu-speaking administrators -- NFR-US-01).
-    // ------------------------------------------------------------------
 
     // (Number / ID)
     private static final String HDR_ID =
@@ -69,9 +35,6 @@ public class GlossaryManagementPanel extends JPanel {
     private static final String HDR_URDU =
         "اردو معنی";
 
-    // ------------------------------------------------------------------
-    // Button / label text (Urdu -- NFR-US-01)
-    // ------------------------------------------------------------------
 
     // (Refresh)
     private static final String LBL_REFRESH =
@@ -101,10 +64,6 @@ public class GlossaryManagementPanel extends JPanel {
     private static final String LBL_URDU_FIELD =
         "اردو معنی:";
 
-    // ------------------------------------------------------------------
-    // Confirmation dialog text (BR-04, NFR-US-05)
-    // ------------------------------------------------------------------
-
     // "کیا آپ واقعی اس اندراج کو حذف کرنا چاہتے ہیں؟"
     // (Do you really want to delete this entry?)
     private static final String MSG_CONFIRM_DELETE =
@@ -130,9 +89,7 @@ public class GlossaryManagementPanel extends JPanel {
     private static final String MSG_DB_ERROR =
         "ڈیٹا بیس میں خرابی ہے۔ "
         + "براہ کرم دوبارہ کوشش کریں۔";
-    // ------------------------------------------------------------------
-    // Instance fields
-    // ------------------------------------------------------------------
+    
     private final GlossaryBO glossaryBO;
 
     /** Spinner that holds the current chapter id selected by the admin. */
@@ -153,16 +110,6 @@ public class GlossaryManagementPanel extends JPanel {
     /** Font used for all Persian and Urdu text (NFR-US-04). */
     private final Font rtlFont;
 
-    // ------------------------------------------------------------------
-    // Constructor
-    // ------------------------------------------------------------------
-
-    /**
-     * Build the panel.  The caller is responsible for creating the GlossaryBO
-     * with the correct IDALFacade before passing it here.
-     *
-     * @param glossaryBO the business object for all glossary operations
-     */
     public GlossaryManagementPanel(GlossaryBO glossaryBO) {
         this.glossaryBO = glossaryBO;
         this.rtlFont    = resolveRtlFont();
@@ -190,23 +137,10 @@ public class GlossaryManagementPanel extends JPanel {
         add(buildSouthPanel(), BorderLayout.SOUTH);
     }
 
-    // ------------------------------------------------------------------
-    // Public accessor (kept from the skeleton)
-    // ------------------------------------------------------------------
-
-    /** Return the GlossaryBO used by this panel (used by tests / demo). */
     public GlossaryBO getGlossaryBO() {
         return glossaryBO;
     }
 
-    // ------------------------------------------------------------------
-    // Panel builders
-    // ------------------------------------------------------------------
-
-    /**
-     * North panel: chapter selector + Refresh button.
-     * Laid out right-to-left so Urdu labels read naturally.
-     */
     private JPanel buildNorthPanel() {
         JPanel north = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         north.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
@@ -237,10 +171,6 @@ public class GlossaryManagementPanel extends JPanel {
         return wrapper;
     }
 
-    /**
-     * South panel: two labelled RTL text fields and three action buttons.
-     * Grid layout: labels in column 0, fields in column 1, buttons in column 2.
-     */
     private JPanel buildSouthPanel() {
         // Use a GridBagLayout for a clean label-field alignment.
         JPanel south = new JPanel(new GridBagLayout());
@@ -280,12 +210,6 @@ public class GlossaryManagementPanel extends JPanel {
 
         return south;
     }
-
-    // ------------------------------------------------------------------
-    // Component builders
-    // ------------------------------------------------------------------
-
-    /** Build the JTable with RTL column renderers and a hidden id column. */
     private JTable buildTable() {
         JTable table = new JTable(tableModel);
         table.setFont(rtlFont);
@@ -351,11 +275,6 @@ public class GlossaryManagementPanel extends JPanel {
         return btn;
     }
 
-    /**
-     * Build a right-to-left JTextField with the shared RTL font.
-     *
-     * @param columns approximate column width hint for Swing
-     */
     private JTextField buildRtlTextField(int columns) {
         JTextField field = new JTextField(columns);
         field.setFont(rtlFont);
@@ -364,20 +283,8 @@ public class GlossaryManagementPanel extends JPanel {
         ((AbstractDocument) field.getDocument()).setDocumentFilter(new NoLatinFilter());
         return field;
     }
-
-    // ------------------------------------------------------------------
-    // Action handlers
-    // ------------------------------------------------------------------
-
-    /**
-     * Add a new glossary entry using the values in the text fields.
-     * On success: refresh the table and clear the fields.
-     * On BusinessException: show the Urdu message; keep the text (BR-07).
-     *
-     * SRS: FR-GL-02, BR-03, BR-07, NFR-US-01, NFR-US-06
-     */
     private void handleAdd() {
-        int chapterId = (Integer) chapterSpinner.getValue();
+        int chapterId = currentChapterId();
         try {
             glossaryBO.addEntry(chapterId,
                                 persianField.getText(),
@@ -391,15 +298,6 @@ public class GlossaryManagementPanel extends JPanel {
             showError(MSG_DB_ERROR);
         }
     }
-
-    /**
-     * Edit the selected glossary entry with the values in the text fields.
-     * A row must be selected first.
-     * On success: refresh and clear.
-     * On BusinessException: show the Urdu message; keep the text (BR-06, BR-07).
-     *
-     * SRS: FR-GL-04, BR-06, BR-07, NFR-US-01, NFR-US-06
-     */
     private void handleEdit() {
         int selectedRow = entryTable.getSelectedRow();
         if (selectedRow < 0) {
@@ -407,7 +305,7 @@ public class GlossaryManagementPanel extends JPanel {
             return;
         }
 
-        int chapterId = (Integer) chapterSpinner.getValue();
+        int chapterId = currentChapterId();
         int entryId   = (Integer) tableModel.getValueAt(selectedRow, COL_ENTRY_ID);
 
         try {
@@ -422,16 +320,6 @@ public class GlossaryManagementPanel extends JPanel {
             showError(MSG_DB_ERROR);
         }
     }
-
-    /**
-     * Delete the selected entry after asking for confirmation.
-     *
-     * The Yes/No dialog result is converted to the boolean "confirmed" flag
-     * and passed straight to deleteEntry (BR-04).
-     *
-     * SRS: FR-GL-05, BR-04, NFR-US-05
-     */
-  
     private void handleDelete() {
         int selectedRow = entryTable.getSelectedRow();
         if (selectedRow < 0) {
@@ -439,7 +327,7 @@ public class GlossaryManagementPanel extends JPanel {
             return;
         }
 
-        int chapterId = (Integer) chapterSpinner.getValue();
+        int chapterId = currentChapterId();
         int entryId   = (Integer) tableModel.getValueAt(selectedRow, COL_ENTRY_ID);
 
         // Show the Urdu confirmation dialog (BR-04, NFR-US-05).
@@ -468,17 +356,8 @@ public class GlossaryManagementPanel extends JPanel {
             showError(MSG_DB_ERROR);
         }
     }
-
-    // ------------------------------------------------------------------
-    // Table helpers
-    // ------------------------------------------------------------------
-
-    /**
-     * Reload the table from the BO for the currently selected chapter.
-     * SRS: FR-GL-03, NFR-PF-01
-     */
     private void refreshTable() {
-        int chapterId = (Integer) chapterSpinner.getValue();
+        int chapterId = currentChapterId();
 
         // Remove all existing rows.
         tableModel.setRowCount(0);
@@ -498,10 +377,6 @@ public class GlossaryManagementPanel extends JPanel {
             showError(MSG_DB_ERROR);
         }
     }
-    /**
-     * When the user selects a row in the table, pre-fill the text fields
-     * with that row's Persian word and Urdu meaning so editing is easy.
-     */
     private void prefillFieldsFromSelection() {
         int row = entryTable.getSelectedRow();
         if (row >= 0) {
@@ -511,22 +386,14 @@ public class GlossaryManagementPanel extends JPanel {
             urduField.setText(meaning == null ? "" : meaning.toString());
         }
     }
-
-    /** Clear both text fields after a successful add, edit, or delete. */
+    /** Id of the chapter currently selected by the admin. */
+    private int currentChapterId() {
+        return (Integer) chapterSpinner.getValue();
+    }
     private void clearFields() {
         persianField.setText("");
         urduField.setText("");
     }
-
-    // ------------------------------------------------------------------
-    // Utility helpers
-    // ------------------------------------------------------------------
-
-    /**
-     * Show a Urdu error message in a dialog (NFR-US-01, NFR-US-06).
-     *
-     * @param message the Urdu message to display
-     */
     private void showError(String message) {
         // Set dialog text direction to right-to-left so Urdu reads naturally.
         JLabel label = new JLabel(message);
@@ -535,18 +402,6 @@ public class GlossaryManagementPanel extends JPanel {
         JOptionPane.showMessageDialog(this, label, TITLE_ERROR,
                                       JOptionPane.ERROR_MESSAGE);
     }
-
-    /**
-     * Resolve the best available font for Persian and Urdu rendering.
-     *
-     * Tries fonts in preference order:
-     *   1. Noto Naskh Arabic — best coverage for both scripts.
-     *   2. Arial Unicode MS  — common on Windows.
-     *   3. JVM default       — fallback; may show boxes for some code points.
-     *
-     * NFR-US-04: the application must use a legible font capable of
-     * displaying all required Persian and Urdu characters.
-     */
     private static Font resolveRtlFont() {
     	/** Blocks English (Latin) letters, including pasted text. */
     	
