@@ -4,10 +4,11 @@ package edu.persianlearningapp.domain;
 public enum ComponentType {
     LEARNING_OBJECTIVES,
     PERSIAN_DIALOGUE,
+    LESSON_TEXT,
     PERSIAN_READING_PASSAGE,
     URDU_TRANSLATION_OR_EXPLANATION,
     GRAMMAR_OR_LANGUAGE_NOTE,
-    EXAMPLES,
     EXERCISES,
-    GLOSSARY
+    EXAMPLES
+    
 }

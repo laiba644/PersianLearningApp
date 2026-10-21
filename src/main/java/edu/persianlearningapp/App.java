@@ -14,11 +14,11 @@ public class App {
         LearningEventSource events = new LearningEventSource();
         ChapterBO chapterBO = new ChapterBO(dal, events);
         StructureBO structurebo = new StructureBO(dal);
-        ContentBO contentBO = new ContentBO(dal); 
+        ContentBO contentBO = new ContentBO(dal);
         GlossaryBO glossaryBO = new GlossaryBO(dal);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-            	MainFrame frame = new MainFrame(chapterBO, structurebo, contentBO, glossaryBO, events);
+                MainFrame frame = new MainFrame(chapterBO, structurebo, contentBO, glossaryBO, events);
                 frame.setVisible(true);
             }
         });
