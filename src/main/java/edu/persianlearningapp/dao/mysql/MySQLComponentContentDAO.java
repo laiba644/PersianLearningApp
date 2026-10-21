@@ -1,4 +1,4 @@
-package edu.persianlearningapp.dao.mysql;
+ package edu.persianlearningapp.dao.mysql;
 
 import edu.persianlearningapp.dao.ComponentContentDAO;
 import edu.persianlearningapp.domain.ComponentContent;
@@ -14,9 +14,9 @@ public class MySQLComponentContentDAO implements ComponentContentDAO {
 	@Override
     public ComponentContent findContent(int chapterId, int componentId) { 
     	String sql="SELECT cc.component_id,cc.persian_content,cc.urdu_content "+
-    				"FROM component_contents cc"+
-    				"JOIN chapter_components c ON cc.component_id=c.component_id"+
-    				"c.chapter_id=? AND cc.component_id=?";
+    				"FROM component_contents cc "+
+    				"JOIN chapter_components c ON cc.component_id=c.component_id "+
+    				"WHERE c.chapter_id=? AND cc.component_id=?";
     	try(Connection connection=DatabaseConnection.open();
     		PreparedStatement statement=connection.prepareStatement(sql)){
     		statement.setInt(1,chapterId);

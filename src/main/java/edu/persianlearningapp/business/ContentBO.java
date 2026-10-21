@@ -1,5 +1,4 @@
 package edu.persianlearningapp.business;
-
 import edu.persianlearningapp.dao.IDALFacade;
 import edu.persianlearningapp.domain.ChapterComponent;
 import java.util.List;
@@ -35,9 +34,11 @@ public class ContentBO {
     	if(!found) {
     		throw new BusinessException("Component not found in chp");
     	}
-    	if((persian==null || persian.trim().isEmpty() && (urdu == null || urdu.trim().isEmpty()))){
-    		throw new BusinessException("Enter urdu or persian content PLEASE");
-    	}
+    	if ((persian == null || persian.trim().isEmpty()) &&
+    		    (urdu == null || urdu.trim().isEmpty())) {
+
+    		    throw new BusinessException("Enter Urdu or Persian content.");
+    		}
     	boolean saved= dal.saveContent(chapterId, componentId, persian, urdu);
     	
     	if(!saved) {
