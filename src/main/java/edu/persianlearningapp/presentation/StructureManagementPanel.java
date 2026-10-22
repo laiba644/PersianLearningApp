@@ -61,6 +61,7 @@ public class StructureManagementPanel extends JPanel implements Observer {
     private final JButton saveButton = new JButton("ساخت محفوظ کریں");
     private final JButton refreshButton = new JButton("تازہ کریں");
     private final JButton clearButton = new JButton("خانے صاف کریں");
+    private final JButton updateButton = new JButton("جزو اپڈیٹ کریں");
     // data base say chapters k load honay tak k time ko mange krnay k liye
     private boolean loadingChapters;
     // observer pattern + jo start say MainFrame say objects aa rhay hain (Singleton pattern)
@@ -99,6 +100,22 @@ public class StructureManagementPanel extends JPanel implements Observer {
             }
         });
 
+        componentList.addListSelectionListener(event -> {
+            if (!event.getValueIsAdjusting()) {
+                updateActionButtons();
+
+                ChapterComponent selected = componentList.getSelectedValue();
+
+                if (selected != null) {
+                    componentTypeComboBox.setSelectedItem(
+                            ComponentType.valueOf(selected.getComponentType()));
+
+                    displayOrderField.setText(
+                            String.valueOf(selected.getDisplayOrder()));
+                }
+            }
+        });
+        
         add(createMainPanel(), BorderLayout.CENTER);
         add(createButtons(), BorderLayout.SOUTH);
 
@@ -117,14 +134,92 @@ public class StructureManagementPanel extends JPanel implements Observer {
         boolean hasComponent = componentList.getSelectedValue() != null;
 
         addButton.setEnabled(hasChapter);
+        updateButton.setEnabled(hasChapter && hasComponent);
         saveButton.setEnabled(hasChapter);
         refreshButton.setEnabled(hasChapter);
         deleteButton.setEnabled(hasChapter && hasComponent);
 
         clearButton.setEnabled(true);
-
         componentTypeComboBox.setEnabled(hasChapter);
         displayOrderField.setEnabled(hasChapter);
+    }
+    
+    private void updateComponent() {
+        int selectedIndex = componentList.getSelectedIndex();
+
+        if (selectedIndex < 0) {
+            showError("اپڈیٹ کرنے کے لیے پہلے ایک جزو منتخب کریں۔");
+            return;
+        }
+
+        try {
+            int chapterId = getSelectedChapterId();
+
+            ChapterComponent existing = componentModel.get(selectedIndex);
+
+            ComponentType selectedType =
+                    (ComponentType) componentTypeComboBox.getSelectedItem();
+
+            if (selectedType == null) {
+                showError("باب کا جزو منتخب کریں۔");
+                return;
+            }
+
+            int newOrder;
+
+            try {
+                newOrder = Integer.parseInt(
+                        displayOrderField.getText().trim());
+            } catch (NumberFormatException e) {
+                showError("ترتیبِ نمائش میں درست عدد درج کریں۔");
+                return;
+            }
+
+            if (newOrder <= 0) {
+                showError("ترتیبِ نمائش مثبت عدد ہونی چاہیے۔");
+                return;
+            }
+
+            for (int i = 0; i < componentModel.size(); i++) {
+                if (i == selectedIndex) {
+                    continue;
+                }
+
+                ChapterComponent other = componentModel.get(i);
+
+                if (other.getComponentType().equals(selectedType.name())) {
+                    showError("یہ جزو پہلے ہی شامل ہے۔");
+                    return;
+                }
+
+                if (other.getDisplayOrder() == newOrder) {
+                    showError("یہ ترتیب پہلے ہی استعمال ہو رہی ہے۔");
+                    return;
+                }
+            }
+
+            ChapterComponent updated = new ChapterComponent(
+                    existing.getId(),
+                    chapterId,
+                    selectedType.name(),
+                    newOrder);
+
+            componentModel.set(selectedIndex, updated);
+
+            sortComponents();
+            clearFields();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "جزو کی تفصیلات تبدیل ہوگئی ہیں۔ اب ساخت محفوظ کریں۔",
+                    "کامیابی",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (RuntimeException e) {
+            showError("جزو اپڈیٹ نہیں ہو سکا: " + e.getMessage());
+        } finally {
+            updateActionButtons();
+        }
     }
 
     private void configureRenderers() {
@@ -376,7 +471,9 @@ public class StructureManagementPanel extends JPanel implements Observer {
         saveButton.addActionListener(event -> saveStructure());
         refreshButton.addActionListener(event -> loadSelectedStructure());
         clearButton.addActionListener(event -> clearFields());
+        updateButton.addActionListener(event -> updateComponent());
 
+        buttons.add(updateButton);
         buttons.add(addButton);
         buttons.add(deleteButton);
         buttons.add(saveButton);
